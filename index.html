@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル（完全版）</title>
+    <title>財務諸表論ドリル（効果音・メモ対応版）</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -284,6 +284,22 @@
             </select>
         </div>
 
+        <div class="form-group" style="margin-top:10px;padding:12px;background:#f5f5f5;border-radius:8px;border:1px solid #ddd;">
+            <label style="font-weight:bold;margin-bottom:8px;">⑥ 解答時の効果音</label>
+            <label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <input type="checkbox" id="sound-enabled" checked onchange="saveSoundSettings()" style="width:20px;height:20px;">
+                <span>正解・不正解の効果音を鳴らす</span>
+            </label>
+            <label for="sound-volume" style="font-size:.9em;">音量：<span id="sound-volume-label">60%</span></label>
+            <input type="range" id="sound-volume" min="0" max="100" value="60"
+                   oninput="updateSoundVolumeLabel()" onchange="saveSoundSettings()"
+                   style="width:100%;margin:6px 0 10px;">
+            <div style="display:flex;gap:8px;">
+                <button type="button" onclick="previewAnswerSound(true)" style="flex:1;padding:10px;border:none;border-radius:7px;background:#e8f5e9;color:#2e7d32;font-weight:bold;">▶ 正解音を試す</button>
+                <button type="button" onclick="previewAnswerSound(false)" style="flex:1;padding:10px;border:none;border-radius:7px;background:#ffebee;color:#c62828;font-weight:bold;">▶ 不正解音を試す</button>
+            </div>
+        </div>
+
         <div class="target-count-box" id="target-count-box">対象問題数: 計算中...</div>
         <button class="start-btn" onclick="startQuiz()" style="width: 100%;">テスト開始</button>
     </div>
@@ -463,10 +479,13 @@
         const STORAGE_DATA_KEY = 'zaim_quiz_alldata_v8';
         const STORAGE_USER_KEY = 'zaim_quiz_userdata_v8';
         const STORAGE_SOURCE_KEY = 'zaim_quiz_csvsources_v9';
+        const STORAGE_SOUND_KEY = 'zaim_quiz_sound_settings_v1';
         
         let allData = JSON.parse(localStorage.getItem(STORAGE_DATA_KEY)) || [];
         let userData = JSON.parse(localStorage.getItem(STORAGE_USER_KEY)) || {};
         let csvSources = JSON.parse(localStorage.getItem(STORAGE_SOURCE_KEY)) || [];
+        let soundSettings = { enabled:true, volume:0.6, ...(JSON.parse(localStorage.getItem(STORAGE_SOUND_KEY) || '{}')) };
+        let audioContext = null;
         
         let activeQuestions = [];
         let currentIndex = 0;
@@ -544,7 +563,8 @@
         }
 
         function showTopMenu() { switchScreen('top'); }
-        function showTestSettings() { switchScreen('test-setting'); }
+        function showTestSettings() {
+            loadSoundSettingsUI(); switchScreen('test-setting'); }
         function showWorkbook() { switchScreen('workbook'); }
 
         // --- CSV Processing ---
@@ -937,7 +957,91 @@
             return shuffle(Array.from(choices));
         }
 
+
+        function getAudioContext() {
+            if (!audioContext) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return null;
+                audioContext = new AudioCtx();
+            }
+            if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+            return audioContext;
+        }
+
+        function loadSoundSettingsUI() {
+            const enabled = document.getElementById('sound-enabled');
+            const volume = document.getElementById('sound-volume');
+            if (!enabled || !volume) return;
+            enabled.checked = soundSettings.enabled !== false;
+            volume.value = Math.round(Math.max(0, Math.min(1, Number(soundSettings.volume) || 0)) * 100);
+            updateSoundVolumeLabel();
+        }
+
+        function updateSoundVolumeLabel() {
+            const volume = document.getElementById('sound-volume');
+            const label = document.getElementById('sound-volume-label');
+            if (volume && label) label.textContent = `${volume.value}%`;
+        }
+
+        function saveSoundSettings() {
+            const enabled = document.getElementById('sound-enabled');
+            const volume = document.getElementById('sound-volume');
+            if (enabled) soundSettings.enabled = enabled.checked;
+            if (volume) soundSettings.volume = Number(volume.value) / 100;
+            localStorage.setItem(STORAGE_SOUND_KEY, JSON.stringify(soundSettings));
+            updateSoundVolumeLabel();
+        }
+
+        function unlockAudio() {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const osc = ctx.createOscillator(), gain = ctx.createGain();
+            gain.gain.value = 0.00001;
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime + 0.01);
+        }
+
+        function playCorrectSound(forcePreview=false) {
+            if (!forcePreview && soundSettings.enabled === false) return;
+            const ctx = getAudioContext(); if (!ctx) return;
+            const v = Math.max(0, Math.min(1, Number(soundSettings.volume) || 0));
+            const now = ctx.currentTime;
+            [{s:0,f:880,d:.13,g:.32},{s:.10,f:1320,d:.24,g:.28}].forEach(n => {
+                const o=ctx.createOscillator(), g=ctx.createGain();
+                o.type='sine'; o.frequency.setValueAtTime(n.f, now+n.s);
+                g.gain.setValueAtTime(.0001, now+n.s);
+                g.gain.exponentialRampToValueAtTime(Math.max(.0001,n.g*v), now+n.s+.012);
+                g.gain.exponentialRampToValueAtTime(.0001, now+n.s+n.d);
+                o.connect(g); g.connect(ctx.destination);
+                o.start(now+n.s); o.stop(now+n.s+n.d+.02);
+            });
+        }
+
+        function playIncorrectSound(forcePreview=false) {
+            if (!forcePreview && soundSettings.enabled === false) return;
+            const ctx = getAudioContext(); if (!ctx) return;
+            const v = Math.max(0, Math.min(1, Number(soundSettings.volume) || 0));
+            const now = ctx.currentTime;
+            [{s:0,f:190},{s:.15,f:155}].forEach(n => {
+                const o=ctx.createOscillator(), g=ctx.createGain();
+                o.type='square'; o.frequency.setValueAtTime(n.f, now+n.s);
+                o.frequency.exponentialRampToValueAtTime(Math.max(80,n.f*.82), now+n.s+.12);
+                g.gain.setValueAtTime(.0001, now+n.s);
+                g.gain.exponentialRampToValueAtTime(Math.max(.0001,.12*v), now+n.s+.008);
+                g.gain.exponentialRampToValueAtTime(.0001, now+n.s+.13);
+                o.connect(g); g.connect(ctx.destination);
+                o.start(now+n.s); o.stop(now+n.s+.15);
+            });
+        }
+
+        function previewAnswerSound(isCorrect) {
+            saveSoundSettings(); unlockAudio();
+            isCorrect ? playCorrectSound(true) : playIncorrectSound(true);
+        }
+
         function startQuiz() {
+            saveSoundSettings();
+            unlockAudio();
             activeQuestions = getFilteredTestQuestions();
             if (activeQuestions.length === 0) { alert("該当する問題がありません！"); return; }
 
@@ -1153,6 +1257,10 @@
             if (u.streak >= 2) statusHtml = `<div style="font-size:0.85em; margin-top:5px; color:#f57f17;">👑 修得済！(連続正解 ${u.streak}回)</div>`;
             else if (u.streak === 1) statusHtml = `<div style="font-size:0.85em; margin-top:5px; color:var(--blue);">👍 連続正解 1回</div>`;
             else statusHtml = `<div style="font-size:0.85em; margin-top:5px; color:var(--red);">⚠️ 要復習 (チェックに登録しました)</div>`;
+
+            // 正誤に応じたオリジナル効果音
+            if (isCorrect) playCorrectSound();
+            else playIncorrectSound();
 
             // 不正解の場合は正解を枠で囲ってわかりやすく表示する
             if (isCorrect) {
