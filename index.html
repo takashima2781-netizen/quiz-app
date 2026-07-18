@@ -429,6 +429,10 @@
                     <label for="edit-explanation">解説・備考</label>
                     <textarea id="edit-explanation" rows="7"></textarea>
                 </div>
+                <div class="edit-row">
+                    <label for="edit-memo">メモ（開発要望・修正案など）</label>
+                    <textarea id="edit-memo" rows="5" placeholder="例：スマホではボタンを大きくしたい／表現を後で見直す"></textarea>
+                </div>
                 <div class="edit-row" id="edit-chunks-row" style="display:none;">
                     <label for="edit-chunks">並べ替え用の区切り（1行につき1つ）</label>
                     <textarea id="edit-chunks" rows="7"></textarea>
@@ -559,7 +563,20 @@
 
                 if (rows.length < 2) { alert("データが空か、正しく読み込めませんでした。"); return; }
 
-                const headers = rows[0].map(h => h ? h.trim() : "");
+                let headers = rows[0].map(h => h ? h.trim() : "");
+
+                // 「メモ」列がない旧CSVにも自動で追加する。
+                let memoIndex = headers.findIndex(h => h === 'メモ' || h.includes('開発要望'));
+                if (memoIndex === -1) {
+                    memoIndex = rows[0].length;
+                    rows[0].push('メモ');
+                    for (let ri = 1; ri < rows.length; ri++) {
+                        while (rows[ri].length < memoIndex) rows[ri].push('');
+                        rows[ri].push('');
+                    }
+                    headers = rows[0].map(h => h ? h.trim() : "");
+                }
+
                 const col = {
                     m: headers.findIndex(h => h.includes('マスターNo')),
                     n: headers.findIndex(h => h === 'No.' || h === 'No'),
@@ -567,7 +584,8 @@
                     imp: headers.findIndex(h => h.includes('重要度')),
                     qText: headers.findIndex(h => h.includes('問題文') || h === '問題'),
                     ans: headers.findIndex(h => h.includes('解答') || h.includes('回答')),
-                    exp: headers.findIndex(h => h.includes('備考') || h.includes('解説'))
+                    exp: headers.findIndex(h => h.includes('備考') || h.includes('解説')),
+                    memo: memoIndex
                 };
 
                 const splitCols = [];
@@ -605,11 +623,13 @@
                     let qText = (r[col.qText] || "").trim();
                     let ans = (col.ans !== -1 && r[col.ans]) ? r[col.ans].trim() : "";
                     let exp = (col.exp !== -1 && r[col.exp]) ? r[col.exp].trim() : "";
+                    const memo = (col.memo !== -1 && r[col.memo]) ? r[col.memo].trim() : "";
                     const base = {
                         id: `${type}_${sourceId}_${i}`,
                         m: mNo, n: no, theme, importance: imp,
                         sourceId, sourceRowIndex: i,
-                        sourceColumns: { m: col.m, n: col.n, theme: col.theme, importance: col.imp, question: col.qText, answer: col.ans, explanation: col.exp, chunks: [...splitCols] },
+                        sourceColumns: { m: col.m, n: col.n, theme: col.theme, importance: col.imp, question: col.qText, answer: col.ans, explanation: col.exp, memo: col.memo, chunks: [...splitCols] },
+                        memo,
                         edited: false, editedAt: null
                     };
 
@@ -1294,6 +1314,7 @@
                 question: q.question || '',
                 answer: q.answer || '',
                 explanation: q.explanation || '',
+                memo: q.memo || '',
                 chunks: Array.isArray(q.chunks) ? [...q.chunks] : []
             };
             document.getElementById('edit-theme').value = q.theme || '';
@@ -1301,6 +1322,7 @@
             document.getElementById('edit-question').value = q.question || '';
             document.getElementById('edit-answer').value = q.answer || '';
             document.getElementById('edit-explanation').value = q.explanation || '';
+            document.getElementById('edit-memo').value = q.memo || '';
             const chunksRow = document.getElementById('edit-chunks-row');
             chunksRow.style.display = q.type === 'sort' ? 'flex' : 'none';
             document.getElementById('edit-chunks').value = Array.isArray(q.chunks) ? q.chunks.join('\n') : '';
@@ -1322,6 +1344,25 @@
             editingOriginal = null;
         }
 
+        function ensureMemoColumn(source) {
+            if (!source) return -1;
+            source.headers = Array.isArray(source.headers) ? source.headers : [];
+            source.rows = Array.isArray(source.rows) ? source.rows : [];
+            let index = source.headers.findIndex(h => String(h || '').trim() === 'メモ' || String(h || '').includes('開発要望'));
+            if (index === -1) {
+                index = source.headers.length;
+                source.headers.push('メモ');
+                if (source.rows.length === 0) source.rows.push([...source.headers]);
+                else {
+                    source.rows[0] = [...source.headers];
+                    for (let i = 1; i < source.rows.length; i++) {
+                        while (source.rows[i].length <= index) source.rows[i].push('');
+                    }
+                }
+            }
+            return index;
+        }
+
         function writeSourceCell(row, index, value) {
             if (!row || index === undefined || index === null || index < 0) return;
             while (row.length <= index) row.push('');
@@ -1337,7 +1378,8 @@
                 importance: document.getElementById('edit-importance').value.trim() || '-',
                 question: document.getElementById('edit-question').value.trim(),
                 answer: document.getElementById('edit-answer').value.trim(),
-                explanation: document.getElementById('edit-explanation').value.trim()
+                explanation: document.getElementById('edit-explanation').value.trim(),
+                memo: document.getElementById('edit-memo').value.trim()
             };
             if (!edited.question) { alert('問題文を入力してください。'); return; }
             if (!edited.answer) { alert('解答を入力してください。'); return; }
@@ -1351,6 +1393,7 @@
             q.question = edited.question;
             q.answer = edited.answer;
             q.explanation = edited.explanation;
+            q.memo = edited.memo;
             if (q.type === 'sort') {
                 const chunks = document.getElementById('edit-chunks').value.split(/\r?\n/).map(v => v.trim()).filter(Boolean);
                 if (chunks.length < 2) { alert('並べ替え用の区切りを2つ以上入力してください。'); return; }
@@ -1363,13 +1406,17 @@
             const original = editingOriginal || {};
             let hasSourceChange = false;
             if (source && source.rows[q.sourceRowIndex]) {
+                const memoColumn = ensureMemoColumn(source);
                 const row = source.rows[q.sourceRowIndex];
                 const c = q.sourceColumns || {};
+                if (c.memo === undefined || c.memo === null || c.memo < 0) c.memo = memoColumn;
+                q.sourceColumns = c;
                 if (q.theme !== original.theme) { writeSourceCell(row, c.theme, q.theme); hasSourceChange = true; }
                 if (q.importance !== original.importance) { writeSourceCell(row, c.importance, q.importance); hasSourceChange = true; }
                 if (q.question !== original.question) { writeSourceCell(row, c.question, q.question); hasSourceChange = true; }
                 if (q.answer !== original.answer) { writeSourceCell(row, c.answer, q.answer); hasSourceChange = true; }
                 if (q.explanation !== original.explanation) { writeSourceCell(row, c.explanation, q.explanation); hasSourceChange = true; }
+                if (q.memo !== original.memo) { writeSourceCell(row, c.memo, q.memo); hasSourceChange = true; }
                 if (q.type === 'sort' && Array.isArray(c.chunks)) {
                     const oldChunks = Array.isArray(original.chunks) ? original.chunks : [];
                     const chunksChanged = JSON.stringify(q.chunks || []) !== JSON.stringify(oldChunks);
