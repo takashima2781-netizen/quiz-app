@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.12 (表示 v10.16)
+Version : 1.0.13 (表示 v10.18)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -9,6 +9,9 @@ Version : 1.0.12 (表示 v10.16)
 仕様書・TODO・更新履歴は本コメントで管理し、別ファイルは原則作成しない。
 
 ■ 今回の更新
+・テスト開始前に「3・2・1・GO!」のカウントダウン演出を追加
+・カウントダウン専用の短い電子音を追加（振動なし）
+・GO!終了後に問題表示と制限時間タイマーを開始
 ・問題画面の結果表示を簡素化（囲い・背景・絵文字・連続正解表示を削除）
 ・正解は赤い○、不正解は青い×に統一
 ・問題文直下に区切り線を追加し、上下余白を圧縮
@@ -81,7 +84,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10.16</title>
+    <title>財務諸表論ドリル v10.18</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -699,6 +702,71 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             }
         }
 
+
+        /* v10.18 Start countdown */
+        .start-countdown {
+            position:fixed;
+            inset:0;
+            z-index:3000;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+            background:rgba(0,0,0,.76);
+            color:#fff;
+            user-select:none;
+            -webkit-user-select:none;
+            pointer-events:auto;
+        }
+        .start-countdown.is-visible {
+            display:flex;
+        }
+        .start-countdown-value {
+            position:relative;
+            z-index:2;
+            min-width:1.4em;
+            text-align:center;
+            font-family:Arial, "Helvetica Neue", sans-serif;
+            font-size:clamp(96px, 32vw, 190px);
+            font-weight:800;
+            line-height:1;
+            letter-spacing:-.06em;
+            text-shadow:0 4px 24px rgba(0,0,0,.4);
+            transform:scale(.72);
+            opacity:0;
+        }
+        .start-countdown-value.is-number {
+            animation:countdownNumber .56s cubic-bezier(.18,.82,.2,1) both;
+        }
+        .start-countdown-value.is-go {
+            min-width:auto;
+            font-size:clamp(76px, 25vw, 150px);
+            letter-spacing:-.04em;
+            animation:countdownGo .62s cubic-bezier(.16,.84,.2,1) both;
+        }
+        @keyframes countdownNumber {
+            0%   { opacity:0; transform:scale(.58); }
+            20%  { opacity:1; transform:scale(1.08); }
+            56%  { opacity:1; transform:scale(1); }
+            100% { opacity:0; transform:scale(1.16); }
+        }
+        @keyframes countdownGo {
+            0%   { opacity:0; transform:scale(.56); }
+            22%  { opacity:1; transform:scale(1.12); }
+            65%  { opacity:1; transform:scale(1); }
+            100% { opacity:0; transform:scale(1.22); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .start-countdown-value.is-number,
+            .start-countdown-value.is-go {
+                animation:countdownFade .56s linear both;
+            }
+            @keyframes countdownFade {
+                0%,100% { opacity:0; }
+                20%,70% { opacity:1; }
+            }
+        }
+
     </style>
     <!-- Shift-JISでのCSV再出力用。通信できない場合はUTF-8(BOM付き)へ自動フォールバックします。 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.2.0/encoding.min.js"></script>
@@ -707,7 +775,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.16</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.18</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -1766,7 +1834,67 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         document.addEventListener('pointerdown', () => { unlockAudio(); }, { once: true, passive: true });
         document.addEventListener('touchstart', () => { unlockAudio(); }, { once: true, passive: true });
 
-        function startQuiz() {
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function playCountdownTone(isGo=false) {
+            if (soundSettings.enabled === false) return;
+            const ctx = getAudioContext();
+            if (!ctx || ctx.state !== 'running') return;
+
+            const now = ctx.currentTime;
+            const volume = Math.max(0, Math.min(1, Number(soundSettings.volume) || 0));
+            const master = ctx.createGain();
+            master.gain.setValueAtTime(0.0001, now);
+            master.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume * (isGo ? 0.38 : 0.28)), now + 0.008);
+            master.gain.exponentialRampToValueAtTime(0.0001, now + (isGo ? 0.28 : 0.115));
+            master.connect(ctx.destination);
+
+            const frequencies = isGo ? [880, 1174.66] : [660];
+            frequencies.forEach((frequency, index) => {
+                const oscillator = ctx.createOscillator();
+                oscillator.type = isGo ? 'sine' : 'square';
+                oscillator.frequency.setValueAtTime(frequency, now);
+                if (isGo) oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.06, now + 0.18);
+                oscillator.connect(master);
+                oscillator.start(now + index * 0.012);
+                oscillator.stop(now + (isGo ? 0.29 : 0.12));
+            });
+        }
+
+        async function runStartCountdown() {
+            const overlay = document.getElementById('start-countdown');
+            const value = document.getElementById('start-countdown-value');
+            if (!overlay || !value) return;
+
+            overlay.classList.add('is-visible');
+            overlay.setAttribute('aria-hidden', 'false');
+
+            const steps = [
+                { text:'3', className:'is-number', duration:600, isGo:false },
+                { text:'2', className:'is-number', duration:600, isGo:false },
+                { text:'1', className:'is-number', duration:600, isGo:false },
+                { text:'GO!', className:'is-go', duration:660, isGo:true }
+            ];
+
+            for (const step of steps) {
+                value.className = 'start-countdown-value';
+                value.textContent = step.text;
+                void value.offsetWidth;
+                value.classList.add(step.className);
+                playCountdownTone(step.isGo);
+                await sleep(step.duration);
+            }
+
+            overlay.classList.remove('is-visible');
+            overlay.setAttribute('aria-hidden', 'true');
+            value.className = 'start-countdown-value';
+            value.textContent = '';
+        }
+
+        async function startQuiz() {
             saveSoundSettings();
             unlockAudio();
             activeQuestions = getFilteredTestQuestions();
@@ -1790,6 +1918,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             clearAutoNext();
             currentIndex = 0; sessionCorrect = 0; sessionHistory = [];
             switchScreen('quiz');
+            await runStartCountdown();
             loadQuestion();
         }
 
@@ -2422,5 +2551,10 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
         window.onload = () => { init(); updateStudyStyleHelp(); };
     </script>
+
+    <div id="start-countdown" class="start-countdown" aria-hidden="true">
+        <div id="start-countdown-value" class="start-countdown-value"></div>
+    </div>
+
 </body>
 </html>
