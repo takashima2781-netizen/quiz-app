@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.11 (表示 v10.11)
+Version : 1.0.11 (表示 v10.12)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -93,35 +93,50 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
         .compact-setting-row { display:grid; grid-template-columns:minmax(112px, 38%) minmax(0, 1fr); align-items:center; gap:10px; margin-bottom:8px; }
         .compact-setting-row > label { margin:0 !important; font-size:.92em; line-height:1.25; }
-        .compact-setting-row select { width:100%; min-width:0; padding:7px 28px 7px 9px; font-size:.92em; background:#fafafa; border:1px solid #d8d8d8; border-radius:4px; box-shadow:none; }
+        .compact-setting-row select { width:100%; min-width:0; padding:7px 32px 7px 2px; font-size:.92em; background:transparent; border:0; border-bottom:1px solid #d6d6d6; border-radius:0; box-shadow:none; appearance:auto; }
+        .compact-setting-row select:focus { outline:none; border-bottom-color:var(--primary); }
         #test-setting-screen { gap:10px; }
         #test-setting-screen > h2 { margin-bottom:2px !important; }
         #test-setting-screen .theme-list { max-height:285px; }
-        .theme-stats-text .theme-stat { display:inline-flex; align-items:center; gap:2px; white-space:nowrap; }
-        .theme-stats-text .mark-master { color:var(--primary-dark); font-weight:bold; letter-spacing:-2px; }
-        .theme-stats-text .mark-one { color:var(--blue); font-weight:bold; }
-        .theme-stats-text .mark-check { color:var(--red); font-weight:bold; }
         @media (max-width:420px) {
             .compact-setting-row { grid-template-columns:104px minmax(0,1fr); gap:8px; }
             .compact-setting-row > label { font-size:.86em; }
             .compact-setting-row select { font-size:.86em; padding-top:8px; padding-bottom:8px; }
         }
-        select, button.start-btn { padding: 10px; font-size: 1em; border-radius: 4px; border: 1px solid #d8d8d8; box-shadow:none; }
-        .target-count-box { background: #fff3e0; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; color: #e65100; border: 1px solid #ffe0b2; margin-top: 5px;}
+        select, button.start-btn { padding: 10px; font-size: 1em; border-radius: 0; border: 0; border-bottom: 1px solid #d6d6d6; box-shadow:none; background:transparent; }
+        .target-count-box { background:transparent; padding:2px 0; border-radius:0; text-align:right; font-size:.84em; font-weight:500; color:#666; border:0; margin-top:0; }
+        .target-count-box strong { font-size:1em; font-weight:700; color:inherit; }
         button.start-btn { background-color: var(--primary); color: white; border: none; font-size: 1.2em; font-weight: bold; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 0 var(--primary-dark); transition: transform 0.1s;}
         button.start-btn:active { transform: translateY(4px); box-shadow: none; }
         
-        /* Theme List (Cards) */
-        .theme-list { display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
-        .theme-card { padding: 12px; background: white; border: 2px solid transparent; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s; position: relative; }
-        .theme-card:hover { border-color: #bbb; }
-        .theme-card.active { border-color: var(--primary); background: #f1f8e9; box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3); }
-        .theme-card-title { font-weight: bold; font-size: 0.9em; margin-bottom: 5px; color: #333; line-height: 1.3;}
-        .theme-stats-text { font-size: 0.75em; color: #666; margin-bottom: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .theme-bar-container { display: flex; height: 10px; width: 100%; background: #e0e0e0; border-radius: 5px; overflow: hidden; }
-        .t-bar-master { background: var(--primary); transition: width 0.3s; }
-        .t-bar-one { background: var(--blue); transition: width 0.3s; }
-        
+        /* Theme Selector */
+        .theme-setting-group { margin-bottom:8px; }
+        .theme-selector-row { display:grid; grid-template-columns:minmax(112px,38%) minmax(0,1fr); align-items:center; gap:10px; }
+        .theme-selector-row > label { margin:0; font-size:.92em; line-height:1.25; }
+        .theme-selector-button { width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 2px; background:transparent; border:0; border-bottom:1px solid #d6d6d6; border-radius:0; color:#222; font:inherit; font-size:.92em; text-align:left; cursor:pointer; }
+        .theme-selector-button:focus { outline:none; border-bottom-color:var(--primary); }
+        .theme-selector-button .theme-selector-text { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .theme-selector-chevron { flex:0 0 auto; font-size:.85em; line-height:1; transition:transform .18s ease; }
+        .theme-selector-button[aria-expanded="true"] .theme-selector-chevron { transform:rotate(180deg); }
+        .theme-list { display:none; flex-direction:column; gap:0; max-height:290px; overflow-y:auto; margin:6px 0 0; padding:0; border:0; border-top:1px solid #e2e2e2; background:white; }
+        .theme-list.is-open { display:flex; }
+        .theme-card { padding:10px 2px; background:white; border:0; border-bottom:1px solid #ececec; border-radius:0; cursor:pointer; box-shadow:none; transition:background .12s ease; position:relative; }
+        .theme-card:last-child { border-bottom:0; }
+        .theme-card:active { background:#f5f5f5; }
+        .theme-card.active { background:#f6fbf4; }
+        .theme-card-title { font-weight:600; font-size:.9em; margin-bottom:4px; color:#333; line-height:1.3; }
+        .theme-stats-text { font-size:.78em; color:#666; margin-bottom:0; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+        .theme-stats-text .theme-stat { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+        .theme-stats-text .mark-master, .theme-stats-text .mark-one { font-family:Arial, sans-serif; font-size:1.12em; line-height:1; letter-spacing:0; font-weight:600; }
+        .theme-stats-text .mark-master { color:var(--primary-dark); }
+        .theme-stats-text .mark-one { color:var(--blue); }
+        .theme-stats-text .mark-check { color:var(--red); font-size:1em; font-weight:600; }
+        .theme-bar-container { display:none; }
+        @media (max-width:420px) {
+            .theme-selector-row { grid-template-columns:104px minmax(0,1fr); gap:8px; }
+            .theme-selector-row > label, .theme-selector-button { font-size:.86em; }
+        }
+
         /* List UI */
         .wb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
         .history-list { text-align: left; max-height: 60vh; overflow-y: auto; background: #fafafa; border: 1px solid #ddd; padding: 5px; border-radius: 5px; list-style: none; margin-top: 5px; }
@@ -349,7 +364,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.11</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.12</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -419,7 +434,13 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         </div>
         
         <div class="form-group theme-setting-group">
-            <label style="font-weight:bold; margin-bottom:5px; font-size:.92em;">② 出題範囲</label>
+            <div class="theme-selector-row">
+                <label for="theme-selector-button" style="font-weight:bold;">② 出題範囲</label>
+                <button type="button" id="theme-selector-button" class="theme-selector-button" onclick="toggleThemeSelector()" aria-expanded="false" aria-controls="theme-list">
+                    <span id="theme-selector-text" class="theme-selector-text">すべてのテーマ</span>
+                    <span class="theme-selector-chevron" aria-hidden="true">⌄</span>
+                </button>
+            </div>
             <div id="theme-list" class="theme-list"></div>
         </div>
         
@@ -491,7 +512,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             </div>
         </div>
 
-        <div class="target-count-box" id="target-count-box">対象問題数: 計算中...</div>
+        <div class="target-count-box" id="target-count-box">計算中...</div>
         <button class="start-btn" onclick="startQuiz()" style="width: 100%;">テスト開始</button>
     </div>
 
@@ -1051,6 +1072,21 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             });
         }
 
+        function toggleThemeSelector(forceOpen) {
+            const list = document.getElementById('theme-list');
+            const button = document.getElementById('theme-selector-button');
+            if (!list || !button) return;
+            const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !list.classList.contains('is-open');
+            list.classList.toggle('is-open', shouldOpen);
+            button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        }
+
+        function updateThemeSelectorText() {
+            const text = document.getElementById('theme-selector-text');
+            if (!text) return;
+            text.textContent = selectedTheme === 'all' ? 'すべてのテーマ' : selectedTheme;
+        }
+
         function renderThemeCards() {
             const list = document.getElementById('theme-list');
             list.innerHTML = '';
@@ -1083,9 +1119,9 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
                 
                 let card = document.createElement('div');
                 card.className = 'theme-card' + (selectedTheme === t ? ' active' : '');
-                card.onclick = () => { selectedTheme = t; renderThemeCards(); updateTargetCount(); };
+                card.onclick = () => { selectedTheme = t; updateThemeSelectorText(); renderThemeCards(); updateTargetCount(); toggleThemeSelector(false); };
                 
-                let title = t === 'all' ? '🌟 すべてのテーマ' : t;
+                let title = t === 'all' ? 'すべてのテーマ' : t;
                 card.innerHTML = `
                     <div class="theme-card-title">${title}</div>
                     <div class="theme-stats-text">
@@ -1101,6 +1137,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
                 `;
                 list.appendChild(card);
             });
+            updateThemeSelectorText();
         }
 
         function getFilteredTestQuestions() {
@@ -1121,11 +1158,11 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             const box = document.getElementById('target-count-box');
             const targetLen = getFilteredTestQuestions().length;
             if (targetLen === 0) {
-                box.innerHTML = `対象問題数: <strong>0問</strong> (条件を変更してください)`;
+                box.innerHTML = `0問（条件を変更してください）`;
                 box.style.color = 'var(--red)';
             } else {
-                box.innerHTML = `対象問題数: <strong>${targetLen}問</strong>`;
-                box.style.color = '#e65100';
+                box.innerHTML = `${targetLen}問`;
+                box.style.color = '#666';
             }
         }
 
