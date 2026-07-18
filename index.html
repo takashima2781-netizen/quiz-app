@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.17 (表示 v10.23)
+Version : 1.0.18 (表示 v10.25)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -94,7 +94,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10.23</title>
+    <title>財務諸表論ドリル v10.25</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -191,7 +191,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .badge-imp { background-color: #FF9800; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; font-weight: bold; }
 
 
-        /* v10.23 Summary history: unified metadata and actions */
+        /* v10.24 Summary history: unified metadata and actions */
         .history-list { padding:4px 10px; background:#fff; border-color:#d9d9d9; border-radius:8px; }
         .history-list li { padding:14px 2px; gap:10px; background:#fff; }
         .history-list li:hover, .history-list li:active { background:#f7f7f7; }
@@ -218,11 +218,139 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .modal-action-btn:active { background:#f3f3f3; }
         .modal-check { display:flex; align-items:center; gap:5px; }
         .modal-check input { width:18px; height:18px; margin:0; accent-color:var(--primary); }
+
+        /* v10.24 Detail modal aligned with quiz screen */
+        .detail-status-row {
+            display:grid;
+            grid-template-columns:minmax(54px,auto) 28px 34px minmax(56px,1fr) 28px 30px;
+            align-items:center;
+            gap:7px;
+            min-height:34px;
+            margin:0 0 7px;
+            padding:2px 38px 7px 0;
+            border-bottom:1px solid #ddd;
+        }
+        .detail-status-row .q-meta { font-size:.68em; }
+        .detail-type { font-size:.68em; font-weight:700; color:#555; white-space:nowrap; }
+        .detail-status-row .history-label {
+            width:34px; height:28px; display:flex; align-items:center; justify-content:center;
+            padding:0; border:0; background:transparent; font-size:1.02em; font-weight:700;
+        }
+        .detail-status-row .compact-check { width:28px; height:28px; }
+        .detail-status-row .adjust-btn { width:30px; height:30px; }
+        .modal-q {
+            margin:0 0 18px; padding:5px 2px 12px; border-bottom:1px solid #ddd;
+            font-size:1.1em; font-weight:700; line-height:1.62;
+        }
+        .modal-result { margin-top:0; padding:0 2px; }
+        .modal-result-title { margin:0 0 12px; font-size:1.28em; line-height:1.25; font-weight:700; }
+        .modal-result-title.correct { color:var(--red); }
+        .modal-result-title.incorrect { color:var(--blue); }
+        .modal-result-title.neutral { color:#333; }
+        .modal-a {
+            margin:0 0 10px; padding:0; border:0; border-radius:0; background:transparent;
+            color:#333; font-size:.96em; line-height:1.45; display:block;
+        }
+        .modal-e {
+            margin:0; padding:0; border:0; border-radius:0; background:transparent;
+            color:#333; font-size:.95em; line-height:1.6; white-space:pre-line;
+        }
+        @media (max-width:480px) {
+            .detail-status-row {
+                grid-template-columns:minmax(48px,auto) 24px 27px minmax(48px,1fr) 24px 26px;
+                gap:5px; padding-right:34px;
+            }
+            .detail-status-row .q-meta { font-size:.64em; }
+            .detail-type { font-size:.62em; }
+        }
         @media (max-width:420px) {
             .history-list { padding-left:8px; padding-right:8px; }
             .history-list li { padding:12px 0; }
             .list-right { width:64px; }
             .meta-chip { padding:2px 7px; font-size:.68em; }
+        }
+
+
+        /* v10.25 Summary list aligned with quiz screen */
+        #session-log.history-list {
+            padding:0;
+            margin-top:6px;
+            border:0;
+            border-radius:0;
+            background:#fff;
+        }
+        #session-log.history-list li {
+            display:block;
+            padding:10px 0 12px;
+            border-bottom:1px solid #ddd;
+            background:#fff;
+            cursor:pointer;
+        }
+        #session-log.history-list li:first-child { border-top:1px solid #ddd; }
+        #session-log.history-list li:hover,
+        #session-log.history-list li:active { background:#fff; }
+        .summary-status-row {
+            display:grid;
+            grid-template-columns:34px minmax(48px,auto) 28px 34px minmax(52px,1fr) 28px 30px;
+            align-items:center;
+            gap:7px;
+            min-height:34px;
+            padding:0 2px 7px;
+        }
+        .summary-status-row .res-icon {
+            width:34px;
+            margin:0;
+            font-size:1.28em;
+            line-height:1;
+        }
+        .summary-status-row .q-meta { font-size:.68em; }
+        .summary-status-row .difficulty-badge { margin:0; }
+        .summary-status-row .history-label {
+            width:34px;
+            height:28px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:0;
+            border:0;
+            border-radius:0;
+            background:transparent !important;
+            font-size:1.02em;
+            font-weight:700;
+            line-height:1;
+        }
+        .summary-type-label {
+            min-width:0;
+            color:#555;
+            font-size:.68em;
+            font-weight:700;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .summary-status-row .compact-check { width:28px; height:28px; }
+        .summary-status-row .adjust-btn { width:30px; height:30px; }
+        .summary-question-preview {
+            margin:0 2px 0 43px;
+            padding:7px 0 0;
+            color:#333;
+            font-size:.94em;
+            font-weight:600;
+            line-height:1.55;
+            overflow:hidden;
+            display:-webkit-box;
+            -webkit-line-clamp:2;
+            -webkit-box-orient:vertical;
+        }
+        @media (max-width:480px) {
+            .summary-status-row {
+                grid-template-columns:30px minmax(44px,auto) 26px 30px minmax(38px,1fr) 26px 28px;
+                gap:5px;
+            }
+            .summary-status-row .res-icon { width:30px; font-size:1.18em; }
+            .summary-status-row .q-meta { font-size:.64em; }
+            .summary-type-label { font-size:.62em; }
+            .summary-question-preview { margin-left:37px; font-size:.9em; }
         }
 
         /* Quiz Screen */
@@ -827,7 +955,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.23</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.25</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -1091,21 +1219,29 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         <div class="modal-content">
             <span class="close-btn" onclick="closeDetail()">&times;</span>
             
-            <div class="modal-meta-wrap">
-                <div id="modal-meta" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
-                <div class="modal-actions">
-                    <div class="meta-chip history-none" id="modal-history">履歴 -</div>
-                    <label class="modal-action-btn modal-check">
-                        <input type="checkbox" id="modal-checkbox" onchange="toggleModalCheck(event)">
-                        <span>チェック</span>
-                    </label>
-                    <button type="button" class="modal-action-btn" onclick="editCurrentModalQuestion()">編集</button>
-                </div>
+            <div class="detail-status-row" aria-label="問題情報">
+                <div class="q-meta" id="modal-meta">No.-</div>
+                <div id="modal-difficulty"></div>
+                <div class="history-label" id="modal-history" aria-label="解答履歴"></div>
+                <div class="detail-type" id="modal-type"></div>
+                <label class="compact-check" title="チェック" aria-label="チェック">
+                    <input type="checkbox" id="modal-checkbox" onchange="toggleModalCheck(event)">
+                </label>
+                <button type="button" class="adjust-btn" onclick="editCurrentModalQuestion()" title="編集" aria-label="問題を編集">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M4 7h10"></path><path d="M18 7h2"></path><circle cx="16" cy="7" r="2"></circle>
+                        <path d="M4 12h2"></path><path d="M10 12h10"></path><circle cx="8" cy="12" r="2"></circle>
+                        <path d="M4 17h8"></path><path d="M16 17h4"></path><circle cx="14" cy="17" r="2"></circle>
+                    </svg>
+                </button>
             </div>
             
             <div class="modal-q" id="modal-q"></div>
-            <div class="modal-a" id="modal-a"></div>
-            <div class="modal-e" id="modal-e"></div>
+            <div class="modal-result">
+                <div class="modal-result-title neutral" id="modal-result-title"></div>
+                <div class="modal-a" id="modal-a"></div>
+                <div class="modal-e" id="modal-e"></div>
+            </div>
         </div>
     </div>
 
@@ -2256,51 +2392,67 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
                 const u = getUserData(log.id);
                 const historyState = historyStateFor(u);
                 const li = document.createElement('li');
+                li.onclick = () => openModalFromSummary(index);
 
-                const leftDiv = document.createElement('div');
-                leftDiv.className = 'list-left';
-                leftDiv.onclick = () => openModalFromSummary(index);
+                const statusRow = document.createElement('div');
+                statusRow.className = 'summary-status-row';
 
-                const icon = log.isCorrect
-                    ? '<span class="res-icon res-correct">○</span>'
-                    : '<span class="res-icon res-incorrect">×</span>';
-                const shortQ = log.qText.length > 46 ? log.qText.substring(0, 46) + '…' : log.qText;
-                leftDiv.innerHTML = `${icon}
-                    <div class="summary-item-body">
-                        <div class="summary-meta-line">
-                            <span class="meta-chip type">${typeLabel(log.type)}</span>
-                            <span class="meta-chip importance">重要度 ${escapeHtml(log.importance || '-')}</span>
-                            <span class="meta-chip number">No.${escapeHtml(String(log.no ?? '-'))}</span>
-                            <span class="meta-chip ${historyState.cls}">履歴 ${historyState.text}</span>
-                        </div>
-                        <div class="summary-question-preview">${escapeHtml(shortQ)}</div>
-                    </div>`;
+                const resultIcon = document.createElement('span');
+                resultIcon.className = `res-icon ${log.isCorrect ? 'res-correct' : 'res-incorrect'}`;
+                resultIcon.textContent = log.isCorrect ? '○' : '×';
 
-                const rightDiv = document.createElement('div');
-                rightDiv.className = 'list-right';
+                const meta = document.createElement('div');
+                meta.className = 'q-meta';
+                meta.innerHTML = `<span class="q-number-main">No.${escapeHtml(String(log.no ?? '-'))}</span>`;
 
-                const chkContainer = document.createElement('label');
-                chkContainer.className = 'list-action';
-                chkContainer.onclick = e => e.stopPropagation();
-                const chkInput = document.createElement('input');
-                chkInput.type = 'checkbox';
-                chkInput.checked = u.checked;
-                chkInput.onchange = e => { u.checked = e.target.checked; saveData(); };
-                const chkSpan = document.createElement('span');
-                chkSpan.innerText = 'チェック';
-                chkContainer.append(chkInput, chkSpan);
+                const difficulty = document.createElement('span');
+                difficulty.className = 'badge-imp difficulty-badge';
+                difficulty.textContent = log.importance || '-';
+
+                const history = document.createElement('div');
+                history.className = 'history-label';
+                history.textContent = historyState.text;
+                history.style.color = historyState.cls === 'history-bad' ? 'var(--red)' :
+                                      historyState.cls === 'history-good' ? 'var(--primary-dark)' : '#888';
+
+                const type = document.createElement('div');
+                type.className = 'summary-type-label';
+                type.textContent = typeLabel(log.type);
+
+                const checkLabel = document.createElement('label');
+                checkLabel.className = 'compact-check';
+                checkLabel.title = 'チェック';
+                checkLabel.setAttribute('aria-label', 'チェック');
+                checkLabel.onclick = e => e.stopPropagation();
+                const checkInput = document.createElement('input');
+                checkInput.type = 'checkbox';
+                checkInput.checked = u.checked;
+                checkInput.onchange = e => { u.checked = e.target.checked; saveData(); };
+                checkLabel.appendChild(checkInput);
 
                 const editBtn = document.createElement('button');
                 editBtn.type = 'button';
-                editBtn.className = 'list-action list-edit-btn';
-                editBtn.innerText = '編集';
+                editBtn.className = 'adjust-btn';
+                editBtn.title = '編集';
+                editBtn.setAttribute('aria-label', '問題を編集');
+                editBtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M4 7h10"></path><path d="M18 7h2"></path><circle cx="16" cy="7" r="2"></circle>
+                    <path d="M4 12h2"></path><path d="M10 12h10"></path><circle cx="8" cy="12" r="2"></circle>
+                    <path d="M4 17h8"></path><path d="M16 17h4"></path><circle cx="14" cy="17" r="2"></circle>
+                </svg>`;
                 editBtn.onclick = e => {
                     e.stopPropagation();
                     openQuestionEditorById(log.id);
                 };
 
-                rightDiv.append(chkContainer, editBtn);
-                li.append(leftDiv, rightDiv);
+                statusRow.append(resultIcon, meta, difficulty, history, type, checkLabel, editBtn);
+
+                const shortQ = log.qText.length > 60 ? log.qText.substring(0, 60) + '…' : log.qText;
+                const preview = document.createElement('div');
+                preview.className = 'summary-question-preview';
+                preview.textContent = shortQ;
+
+                li.append(statusRow, preview);
                 logContainer.appendChild(li);
             });
         }
@@ -2311,21 +2463,20 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             
             const displayNo = qObj.n ?? qObj.no ?? '-';
             const displayMaster = qObj.m ?? qObj.master ?? '-';
-            document.getElementById('modal-meta').innerHTML = `
-                <span class="meta-chip type">${typeLabel(qObj.type)}</span>
-                <span class="meta-chip importance">重要度 ${escapeHtml(qObj.importance || '-')}</span>
-                <span class="meta-chip number">No.${escapeHtml(String(displayNo))}</span>
-                <span class="meta-chip number">M${escapeHtml(String(displayMaster))}</span>`;
+            document.getElementById('modal-meta').innerHTML = `<span class="q-number-main">No.${escapeHtml(String(displayNo))}</span><span class="q-master">(${escapeHtml(String(displayMaster))})</span>`;
+            document.getElementById('modal-difficulty').innerHTML = `<span class="badge-imp difficulty-badge">${escapeHtml(qObj.importance || '-')}</span>`;
+            document.getElementById('modal-type').innerText = typeLabel(qObj.type);
             
             document.getElementById('modal-checkbox').checked = u.checked;
-            let histText = "未解答";
-            if (u.played) {
-                if (u.streak >= 2) histText = "○○"; else if (u.streak === 1) histText = "〇"; else histText = "✕"; 
-            }
+            let histText = "";
+            if (u.everWrong) histText = "×";
+            else if (u.played && u.streak >= 2) histText = "○○";
+            else if (u.played && u.streak === 1) histText = "○";
             const histLabel = document.getElementById('modal-history');
-            const hs = historyStateFor(u);
-            histLabel.innerText = `履歴 ${hs.text}`;
-            histLabel.className = `meta-chip ${hs.cls}`;
+            histLabel.innerText = histText;
+            histLabel.style.visibility = histText ? 'visible' : 'hidden';
+            histLabel.style.color = histText === '×' ? 'var(--blue)' : 'var(--red)';
+            histLabel.style.background = 'transparent';
             
             document.getElementById('modal-q').innerText = qObj.question || qObj.qText;
             document.getElementById('modal-a').innerHTML = userAnswerHtml;
@@ -2337,18 +2488,21 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         function openModalFromSummary(index) {
             isModalFromWorkbook = false;
             const log = sessionHistory[index];
-            let aHtml = `
-                <div style="margin-bottom:8px;">あなたの解答: <strong style="color:${log.isCorrect ? 'var(--primary-dark)' : 'var(--red)'}; display:block; padding-left:10px;">${log.userAnswer}</strong></div>
-                <div>正解: <strong style="display:block; padding-left:10px;">${log.correctAnswer}</strong></div>
-            `;
+            let aHtml = `<p class="result-answer">正解：${escapeHtml(log.correctAnswer)}</p>`;
             populateModal(log, aHtml);
+            const title = document.getElementById('modal-result-title');
+            title.className = `modal-result-title ${log.isCorrect ? 'correct' : 'incorrect'}`;
+            title.textContent = log.isCorrect ? '○ 正解' : '× 不正解';
         }
 
         function openModalFromWorkbook(qId) {
             isModalFromWorkbook = true;
             const q = allData.find(item => item.id === qId);
-            let aHtml = `<div>正解: <strong style="color:var(--primary-dark); display:block; padding-top:5px;">${q.answer}</strong></div>`;
+            let aHtml = `<p class="result-answer">正解：${escapeHtml(q.answer)}</p>`;
             populateModal(q, aHtml);
+            const title = document.getElementById('modal-result-title');
+            title.className = 'modal-result-title neutral';
+            title.textContent = '解答・解説';
         }
 
         function editCurrentModalQuestion() {
