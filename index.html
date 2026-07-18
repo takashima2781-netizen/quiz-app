@@ -9,6 +9,11 @@ Version : 1.0.12 (表示 v10.16)
 仕様書・TODO・更新履歴は本コメントで管理し、別ファイルは原則作成しない。
 
 ■ 今回の更新
+・問題画面の結果表示を簡素化（囲い・背景・絵文字・連続正解表示を削除）
+・正解は赤い○、不正解は青い×に統一
+・問題文直下に区切り線を追加し、上下余白を圧縮
+・正解表示と解説の間隔を圧縮
+・ステータス行の各アイコンを縮小し、上詰め配置
 ・テーマ直下にステータス行を上詰め配置
 ・ステータス行の下に区切り線を配置
 ・タイマーに線画の時計アイコンを追加
@@ -530,6 +535,167 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             #top-menu-screen .menu-btn {
                 min-height: 54px;
                 font-size: 1em;
+            }
+        }
+
+
+        /* v10.17 Quiz result / compact status refinement */
+        .quiz-header {
+            align-items:baseline;
+            padding-bottom:0;
+            margin-bottom:0;
+            gap:8px;
+            line-height:1.2;
+        }
+        .theme-label {
+            font-size:.84em;
+            line-height:1.2;
+        }
+        .progress-label {
+            font-size:.88em;
+            line-height:1.2;
+            margin-left:4px;
+        }
+        .question-layout {
+            margin:0 0 8px;
+            padding:0 0 8px;
+            border-bottom:1px solid #ddd;
+        }
+        .status-row {
+            grid-template-columns:minmax(50px,auto) 25px 28px minmax(78px,1fr) 25px 27px;
+            gap:5px;
+            min-height:29px;
+            margin:0 0 4px;
+            padding:0 0 4px;
+            align-items:start;
+            border-bottom:1px solid #ddd;
+        }
+        .q-meta {
+            font-size:.63em;
+            line-height:1.03;
+            padding-top:1px;
+        }
+        .q-master {
+            margin-top:1px;
+        }
+        .difficulty-badge {
+            width:25px;
+            height:25px;
+            border-radius:6px;
+            font-size:.69em;
+        }
+        .compact-check {
+            width:25px;
+            height:25px;
+        }
+        .compact-check input {
+            width:18px;
+            height:18px;
+        }
+        .status-row .history-label {
+            min-width:26px;
+            height:25px;
+            font-size:.91em;
+            align-items:flex-start;
+            padding-top:3px;
+        }
+        .adjust-btn {
+            width:27px;
+            height:27px;
+        }
+        .adjust-btn svg {
+            width:18px;
+            height:18px;
+        }
+        .timer-panel {
+            min-width:78px;
+        }
+        .timer-main {
+            gap:3px;
+        }
+        .timer-icon {
+            width:15px;
+            height:15px;
+            flex-basis:15px;
+        }
+        .timer-clock {
+            min-width:39px;
+            font-size:.71em;
+        }
+        .timer-track {
+            margin-top:2px;
+        }
+        .question-area {
+            margin-top:0;
+        }
+        .question {
+            min-height:0;
+            padding:5px 2px 2px;
+            margin:0;
+            line-height:1.62;
+        }
+        .action-wrapper {
+            margin-top:9px;
+        }
+
+        #result-area {
+            display:none;
+            margin-top:18px;
+            padding:0 2px;
+            border:0 !important;
+            border-radius:0;
+            background:transparent !important;
+            box-shadow:none;
+            animation:fadeIn .2s;
+        }
+        #result-area.correct-bg,
+        #result-area.incorrect-bg {
+            border:0;
+            background:transparent;
+        }
+        .result-title {
+            margin:0 0 12px;
+            font-size:1.28em;
+            line-height:1.25;
+            font-weight:700;
+        }
+        .result-title.result-correct {
+            color:var(--red) !important;
+        }
+        .result-title.result-incorrect {
+            color:var(--blue) !important;
+        }
+        .result-answer {
+            margin:0 0 10px;
+            color:#333;
+            font-size:.96em;
+            font-weight:400;
+            line-height:1.45;
+        }
+        .explanation {
+            margin-top:0;
+            padding:0;
+            border:0;
+            border-radius:0;
+            background:transparent;
+            color:#333;
+            font-size:.95em;
+            line-height:1.6;
+            white-space:pre-line;
+        }
+        @media (max-width:480px) {
+            .question-layout {
+                margin-top:0;
+                padding-bottom:7px;
+            }
+            .status-row {
+                grid-template-columns:minmax(48px,auto) 24px 27px minmax(72px,1fr) 24px 26px;
+                gap:4px;
+                min-height:28px;
+            }
+            .question {
+                min-height:0;
+                padding-top:4px;
             }
         }
 
@@ -1752,8 +1918,8 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             const histLabel = document.getElementById('q-history');
             histLabel.innerText = histText;
             histLabel.style.visibility = histText ? 'visible' : 'hidden';
-            if (histText === "○○" || histText === "○") histLabel.style.color = "var(--primary-dark)";
-            else if (histText === "×") histLabel.style.color = "var(--red)";
+            if (histText === "○○" || histText === "○") histLabel.style.color = "var(--red)";
+            else if (histText === "×") histLabel.style.color = "var(--blue)";
             else histLabel.style.color = "transparent";
             histLabel.style.background = "transparent";
 
@@ -1834,8 +2000,8 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             const currentHistText = u.everWrong ? '×' : (u.streak >= 2 ? '○○' : (u.streak === 1 ? '○' : ''));
             currentHist.innerText = currentHistText;
             currentHist.style.visibility = currentHistText ? 'visible' : 'hidden';
-            currentHist.style.color = u.everWrong ? 'var(--red)' : 'var(--primary-dark)';
-            currentHist.style.background = u.everWrong ? '#ffebee' : '#e8f5e9';
+            currentHist.style.color = u.everWrong ? 'var(--blue)' : 'var(--red)';
+            currentHist.style.background = 'transparent';
             document.getElementById('action-area-ox').style.visibility = 'hidden';
             document.getElementById('action-area-4c').style.visibility = 'hidden';
             document.getElementById('action-area-sort').style.visibility = 'hidden';
@@ -1846,28 +2012,17 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             const rExp = document.getElementById('r-exp');
             resultArea.style.display = 'block';
             
-            let statusHtml = "";
-            if (u.streak >= 2) statusHtml = `<div style="font-size:0.85em; margin-top:5px; color:#f57f17;">👑 修得済！(連続正解 ${u.streak}回)</div>`;
-            else if (u.streak === 1) statusHtml = `<div style="font-size:0.85em; margin-top:5px; color:var(--blue);">👍 連続正解 1回</div>`;
-            else statusHtml = `<div style="font-size:0.85em; margin-top:5px; color:var(--red);">⚠️ 要復習 (チェックに登録しました)</div>`;
-
-            // 正誤に応じたオリジナル効果音
+            // 正誤に応じた効果音と画面エフェクト
             if (isCorrect) playCorrectSound();
             else playIncorrectSound();
             showAnswerEffect(isCorrect);
 
-            // 不正解の場合は正解を枠で囲ってわかりやすく表示する
-            if (isCorrect) {
-                resultArea.className = 'correct-bg'; 
-                rTitle.innerHTML = `正解！ 🎉 ${statusHtml}`; 
-                rTitle.style.color = 'var(--primary-dark)';
-            } else {
-                resultArea.className = 'incorrect-bg';
-                const missTitle = isTimeUp ? '時間切れです' : '不正解...';
-                rTitle.innerHTML = `${missTitle} ${statusHtml}<div style="font-size:0.8em; font-weight:normal; color:#333; margin-top:8px; line-height:1.4; padding:8px; background:white; border-radius:5px; border-left:3px solid var(--red);">正解：<br><b>${q.answer}</b></div>`;
-                rTitle.style.color = 'var(--red)';
-            }
-            rExp.innerText = q.explanation ? "【解説】\n" + q.explanation : "【解説】\n特になし";
+            resultArea.className = isCorrect ? 'correct-bg' : 'incorrect-bg';
+            rTitle.className = `result-title ${isCorrect ? 'result-correct' : 'result-incorrect'}`;
+            rTitle.textContent = isCorrect ? '○ 正解' : '× 不正解';
+
+            const correctAnswerHtml = `<p class="result-answer">正解：${escapeHtml(q.answer)}</p>`;
+            rExp.innerHTML = `${correctAnswerHtml}<div>【解説】<br>${escapeHtml(q.explanation || '特になし')}</div>`;
 
             if (studyStyle === 'training') {
                 const feedback = document.getElementById('training-feedback');
