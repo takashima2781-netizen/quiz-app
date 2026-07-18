@@ -1,9 +1,54 @@
+<!--
+==================================================
+財表ドリル 開発情報
+Version : 1.0.0 (表示 v10)
+最終更新 : 2026-07-18
+
+■ このファイルについて
+この index.html をプロジェクトの唯一の正本（Single Source of Truth）とする。
+仕様書・TODO・更新履歴は本コメントで管理し、別ファイルは原則作成しない。
+
+■ 今回の更新
+・学習モード追加
+・トレーニングモード追加
+・自動送り機能追加
+・自動送り停止ボタン追加
+・学習スタイル選択追加
+
+■ 現在のTODO
+【高】
+□ 苦手問題モード
+□ 学習統計
+□ iPhone実機での操作感改善
+
+【中】
+□ 復習アルゴリズム
+□ UI改善
+
+【将来】
+□ PWA対応
+□ AIによる出題支援
+□ データ同期
+
+■ 設計方針
+・スマホファースト
+・既存データとの互換性を維持
+・コードの可読性・保守性を重視
+・必要に応じてリファクタリングを行う
+
+■ 運用ルール
+ユーザーは常に最新版の index.html のみを管理する。
+ChatGPT はコードだけでなく、この開発情報も毎回更新する。
+
+==================================================
+-->
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル（内蔵効果音・メモ対応版）</title>
+    <title>財務諸表論ドリル v10（学習・トレーニングモード対応）</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -89,6 +134,18 @@
         .timer-panel.warning .timer-fill { background:#FF9800; }
         .timer-panel.danger .timer-clock { color:var(--red); }
         .timer-panel.danger .timer-fill { background:var(--red); }
+
+        /* v10: Study style / training auto-next */
+        .study-style-box { background:#eef7ff; border:1px solid #bbdefb; padding:12px; border-radius:8px; }
+        .study-style-help { margin-top:6px; color:#607d8b; font-size:.82em; line-height:1.5; }
+        .training-feedback { display:none; margin-top:10px; padding:10px 12px; border-radius:8px; font-weight:bold; text-align:center; }
+        .training-feedback.correct { display:block; background:#e8f5e9; color:var(--primary-dark); border:1px solid #a5d6a7; }
+        .training-feedback.incorrect { display:block; background:#ffebee; color:#c62828; border:1px solid #ef9a9a; }
+        .auto-next-panel { display:none; margin-top:10px; padding:9px 11px; background:#f5f5f5; border:1px solid #ddd; border-radius:8px; }
+        .auto-next-top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; font-size:.8em; color:#666; }
+        .auto-next-track { height:7px; background:#ddd; border-radius:999px; overflow:hidden; }
+        .auto-next-fill { width:0%; height:100%; background:var(--primary); }
+        .auto-next-cancel { border:1px solid #ccc; background:white; color:#555; border-radius:6px; padding:5px 9px; font-weight:bold; cursor:pointer; }
 
         /* Action Area */
         .action-wrapper { position: relative; margin-top: 10px; width: 100%; }
@@ -177,7 +234,7 @@
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -261,8 +318,19 @@
             </select>
         </div>
         
+        <div class="form-group study-style-box" style="margin-top: 10px;">
+            <label style="font-weight: bold; margin-bottom: 5px;">④ 学習スタイル</label>
+            <select id="select-study-style" onchange="updateStudyStyleHelp()">
+                <option value="learning">学習モード（解説を読んで自分で次へ）</option>
+                <option value="training">トレーニングモード（正誤表示後に自動で次へ）</option>
+            </select>
+            <div class="study-style-help" id="study-style-help">
+                正誤と解説を確認し、「次の問題へ」を押して進みます。
+            </div>
+        </div>
+
         <div class="form-group" style="margin-top: 10px;">
-            <label style="font-weight: bold; margin-bottom: 5px;">④ 1問あたりの制限時間</label>
+            <label style="font-weight: bold; margin-bottom: 5px;">⑤ 1問あたりの制限時間</label>
             <select id="select-time-limit">
                 <option value="0">設定なし</option>
                 <option value="1">1秒</option>
@@ -276,7 +344,7 @@
         </div>
 
         <div class="form-group">
-            <label style="font-weight: bold; margin-bottom: 5px;">⑤ 出題順</label>
+            <label style="font-weight: bold; margin-bottom: 5px;">⑥ 出題順</label>
             <select id="select-question-order">
                 <option value="random">ランダム</option>
                 <option value="asc">No.の昇順</option>
@@ -285,7 +353,7 @@
         </div>
 
         <div class="form-group" style="margin-top:10px;padding:12px;background:#f5f5f5;border-radius:8px;border:1px solid #ddd;">
-            <label style="font-weight:bold;margin-bottom:8px;">⑥ 解答時の効果音</label>
+            <label style="font-weight:bold;margin-bottom:8px;">⑦ 解答時の効果音</label>
             <label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
                 <input type="checkbox" id="sound-enabled" checked onchange="saveSoundSettings()" style="width:20px;height:20px;">
                 <span>正解・不正解の効果音を鳴らす</span>
@@ -375,9 +443,19 @@
             <button class="btn-next" id="btn-next" onclick="nextQuestion()">次の問題へ</button>
         </div>
 
+        <div id="training-feedback" class="training-feedback" aria-live="polite"></div>
+
         <div id="result-area">
             <div class="result-title" id="r-title"></div>
             <div class="explanation" id="r-exp"></div>
+        </div>
+
+        <div id="auto-next-panel" class="auto-next-panel">
+            <div class="auto-next-top">
+                <span>まもなく次の問題へ進みます</span>
+                <button type="button" class="auto-next-cancel" onclick="cancelAutoNext()">停止</button>
+            </div>
+            <div class="auto-next-track"><div id="auto-next-fill" class="auto-next-fill"></div></div>
         </div>
     </div>
 
@@ -495,6 +573,10 @@
         let questionTimerId = null;
         let questionTimerStartedAt = 0;
         let questionAnswered = false;
+        let studyStyle = 'learning';
+        let autoNextTimerId = null;
+        let autoNextAnimationId = null;
+        const AUTO_NEXT_DELAY_MS = 1400;
 
         
         // 並べ替え問題用ステート
@@ -557,7 +639,7 @@
         function handleBack() {
             if (currentScreen === 'test-setting' || currentScreen === 'workbook') showTopMenu();
             else if (currentScreen === 'quiz') {
-                if (confirm('テストを中断して設定画面に戻りますか？')) { stopQuestionTimer(); switchScreen('test-setting'); }
+                if (confirm('テストを中断して設定画面に戻りますか？')) { stopQuestionTimer(); clearAutoNext(); switchScreen('test-setting'); }
             }
             else if (currentScreen === 'init' && allData.length > 0) showTopMenu();
         }
@@ -566,6 +648,59 @@
         function showTestSettings() {
             loadSoundSettingsUI(); switchScreen('test-setting'); }
         function showWorkbook() { switchScreen('workbook'); }
+
+        function updateStudyStyleHelp() {
+            const select = document.getElementById('select-study-style');
+            const help = document.getElementById('study-style-help');
+            if (!select || !help) return;
+            help.textContent = select.value === 'training'
+                ? '正誤を短く表示した後、自動で次の問題へ進みます。停止ボタンで解説を確認できます。'
+                : '正誤と解説を確認し、「次の問題へ」を押して進みます。';
+        }
+
+        function clearAutoNext() {
+            if (autoNextTimerId !== null) {
+                clearTimeout(autoNextTimerId);
+                autoNextTimerId = null;
+            }
+            if (autoNextAnimationId !== null) {
+                cancelAnimationFrame(autoNextAnimationId);
+                autoNextAnimationId = null;
+            }
+            const panel = document.getElementById('auto-next-panel');
+            const fill = document.getElementById('auto-next-fill');
+            if (panel) panel.style.display = 'none';
+            if (fill) fill.style.width = '0%';
+        }
+
+        function cancelAutoNext() {
+            clearAutoNext();
+            const feedback = document.getElementById('training-feedback');
+            if (feedback) feedback.style.display = 'none';
+            document.getElementById('result-area').style.display = 'block';
+            document.getElementById('btn-next').style.display = 'block';
+        }
+
+        function scheduleAutoNext() {
+            clearAutoNext();
+            const panel = document.getElementById('auto-next-panel');
+            const fill = document.getElementById('auto-next-fill');
+            panel.style.display = 'block';
+            const startedAt = performance.now();
+
+            const animate = now => {
+                const progress = Math.min(100, ((now - startedAt) / AUTO_NEXT_DELAY_MS) * 100);
+                fill.style.width = `${progress}%`;
+                if (progress < 100 && autoNextTimerId !== null) {
+                    autoNextAnimationId = requestAnimationFrame(animate);
+                }
+            };
+            autoNextAnimationId = requestAnimationFrame(animate);
+            autoNextTimerId = setTimeout(() => {
+                autoNextTimerId = null;
+                nextQuestion();
+            }, AUTO_NEXT_DELAY_MS);
+        }
 
         // --- CSV Processing ---
         function processCSV(type) {
@@ -1109,6 +1244,8 @@
             }
 
             questionTimeLimit = Number(document.getElementById('select-time-limit').value) || 0;
+            studyStyle = document.getElementById('select-study-style')?.value || 'learning';
+            clearAutoNext();
             currentIndex = 0; sessionCorrect = 0; sessionHistory = [];
             switchScreen('quiz');
             loadQuestion();
@@ -1202,7 +1339,14 @@
 
         function loadQuestion() {
             stopQuestionTimer();
+            clearAutoNext();
             questionAnswered = false;
+            const trainingFeedback = document.getElementById('training-feedback');
+            if (trainingFeedback) {
+                trainingFeedback.style.display = 'none';
+                trainingFeedback.className = 'training-feedback';
+                trainingFeedback.innerHTML = '';
+            }
             const q = activeQuestions[currentIndex];
             const u = getUserData(q.id);
             
@@ -1324,10 +1468,22 @@
                 rTitle.style.color = 'var(--red)';
             }
             rExp.innerText = q.explanation ? "【解説】\n" + q.explanation : "【解説】\n特になし";
+
+            if (studyStyle === 'training') {
+                const feedback = document.getElementById('training-feedback');
+                resultArea.style.display = 'none';
+                document.getElementById('btn-next').style.display = 'none';
+                feedback.className = `training-feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+                feedback.innerHTML = isCorrect
+                    ? '正解！ 次へ進みます'
+                    : `${isTimeUp ? '時間切れ' : '不正解'}　正解：${escapeHtml(q.answer)}`;
+                scheduleAutoNext();
+            }
         }
 
         function nextQuestion() {
             stopQuestionTimer();
+            clearAutoNext();
             currentIndex++;
             if (currentIndex >= activeQuestions.length) {
                 switchScreen('summary');
@@ -1709,7 +1865,7 @@
             }
         }
 
-        window.onload = init;
+        window.onload = () => { init(); updateStudyStyleHelp(); };
     </script>
 </body>
 </html>
