@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.0 (表示 v10)
+Version : 1.0.1 (表示 v10.1)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -14,6 +14,7 @@ Version : 1.0.0 (表示 v10)
 ・自動送り機能追加
 ・自動送り停止ボタン追加
 ・学習スタイル選択追加
+・正誤判定時の薄い○×エフェクト追加（正解：赤／不正解：青）
 
 ■ 現在のTODO
 【高】
@@ -146,6 +147,54 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .auto-next-track { height:7px; background:#ddd; border-radius:999px; overflow:hidden; }
         .auto-next-fill { width:0%; height:100%; background:var(--primary); }
         .auto-next-cancel { border:1px solid #ccc; background:white; color:#555; border-radius:6px; padding:5px 9px; font-weight:bold; cursor:pointer; }
+
+        /* v10.1: simple answer effect */
+        .answer-effect {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 2000;
+        }
+        .answer-effect.show { display: flex; }
+        .answer-effect-mark {
+            position: relative;
+            width: min(52vw, 230px);
+            height: min(52vw, 230px);
+            opacity: .34;
+            transform: scale(.78);
+            animation: answerEffectPop .52s ease-out forwards;
+        }
+        .answer-effect.correct .answer-effect-mark {
+            border: clamp(14px, 4vw, 24px) solid #ef5350;
+            border-radius: 50%;
+        }
+        .answer-effect.incorrect .answer-effect-mark::before,
+        .answer-effect.incorrect .answer-effect-mark::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 112%;
+            height: clamp(14px, 4vw, 24px);
+            border-radius: 999px;
+            background: #4f8edc;
+            transform-origin: center;
+        }
+        .answer-effect.incorrect .answer-effect-mark::before { transform: translate(-50%, -50%) rotate(45deg); }
+        .answer-effect.incorrect .answer-effect-mark::after { transform: translate(-50%, -50%) rotate(-45deg); }
+        @keyframes answerEffectPop {
+            0% { opacity: 0; transform: scale(.72); }
+            24% { opacity: .34; transform: scale(1.04); }
+            72% { opacity: .34; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.02); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .answer-effect-mark { animation: answerEffectFade .45s linear forwards; transform: none; }
+            @keyframes answerEffectFade { from { opacity: .34; } to { opacity: 0; } }
+        }
 
         /* Action Area */
         .action-wrapper { position: relative; margin-top: 10px; width: 100%; }
@@ -444,6 +493,10 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         </div>
 
         <div id="training-feedback" class="training-feedback" aria-live="polite"></div>
+
+        <div id="answer-effect" class="answer-effect" aria-hidden="true">
+            <div class="answer-effect-mark"></div>
+        </div>
 
         <div id="result-area">
             <div class="result-title" id="r-title"></div>
@@ -1413,6 +1466,17 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             saveData();
         }
 
+        function showAnswerEffect(isCorrect) {
+            const effect = document.getElementById('answer-effect');
+            if (!effect) return;
+            effect.className = `answer-effect ${isCorrect ? 'correct' : 'incorrect'}`;
+            void effect.offsetWidth;
+            effect.classList.add('show');
+            window.setTimeout(() => {
+                effect.classList.remove('show');
+            }, 560);
+        }
+
         function checkAnswer(userAnswer, isTimeUp = false) {
             if (questionAnswered) return;
             questionAnswered = true;
@@ -1455,6 +1519,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             // 正誤に応じたオリジナル効果音
             if (isCorrect) playCorrectSound();
             else playIncorrectSound();
+            showAnswerEffect(isCorrect);
 
             // 不正解の場合は正解を枠で囲ってわかりやすく表示する
             if (isCorrect) {
