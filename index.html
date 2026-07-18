@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.18 (表示 v10.25)
+Version : 1.0.18 (表示 v10.26)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -94,7 +94,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10.25</title>
+    <title>財務諸表論ドリル v10.26</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -271,7 +271,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         }
 
 
-        /* v10.25 Summary list aligned with quiz screen */
+        /* v10.26 Summary list aligned with quiz screen */
         #session-log.history-list {
             padding:0;
             margin-top:6px;
@@ -947,6 +947,95 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             }
         }
 
+    
+
+        /* v10.26: summary/detail alignment and OX colors */
+        #session-log.history-list li {
+            padding:8px 0 10px;
+        }
+        .summary-status-row {
+            padding:0 2px 2px;
+            min-height:36px;
+        }
+        .summary-question-preview {
+            margin:0 2px 0 43px;
+            padding:0;
+            font-size:.94em;
+            line-height:1.48;
+        }
+        .summary-status-row .res-icon {
+            font-size:1.62em;
+            font-weight:800;
+            line-height:1;
+        }
+        .res-icon.res-correct { color:var(--red) !important; }
+        .res-icon.res-incorrect { color:var(--blue) !important; }
+        .summary-status-row .q-meta .q-master {
+            display:block;
+            margin-top:2px;
+            color:#999;
+            font-size:.88em;
+            font-weight:600;
+        }
+
+        /* Detail result uses the same simple treatment as quiz results */
+        .modal-result {
+            margin-top:0;
+            padding:0 2px;
+        }
+        .modal-result-title {
+            margin:0 0 8px;
+            font-size:1.28em;
+            line-height:1.25;
+            font-weight:700;
+        }
+        .modal-result-title.correct { color:var(--red) !important; }
+        .modal-result-title.incorrect { color:var(--blue) !important; }
+        .modal-a {
+            display:block !important;
+            margin:0 0 8px !important;
+            padding:0 !important;
+            border:0 !important;
+            border-radius:0 !important;
+            background:transparent !important;
+            box-shadow:none !important;
+            color:#333;
+            font-size:.96em;
+            line-height:1.45;
+        }
+        .modal-a .result-answer { margin:0; }
+        .modal-e {
+            margin:0 !important;
+            padding:0 !important;
+            border:0 !important;
+            border-radius:0 !important;
+            background:transparent !important;
+            box-shadow:none !important;
+            color:#333;
+            font-size:.95em;
+            line-height:1.6;
+            white-space:pre-line;
+        }
+
+        /* Answer buttons: circle = red, cross = blue */
+        .btn-o {
+            background-color:var(--red) !important;
+            box-shadow:0 4px 0 #D32F2F !important;
+        }
+        .btn-x {
+            background-color:var(--blue) !important;
+            box-shadow:0 4px 0 #1976D2 !important;
+        }
+
+        @media (max-width:480px) {
+            .summary-status-row .res-icon { font-size:1.52em; }
+            .summary-question-preview {
+                margin-left:37px;
+                padding-top:0;
+                font-size:.9em;
+            }
+        }
+
     </style>
     <!-- Shift-JISでのCSV再出力用。通信できない場合はUTF-8(BOM付き)へ自動フォールバックします。 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.2.0/encoding.min.js"></script>
@@ -955,7 +1044,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.25</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.26</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -2403,7 +2492,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
                 const meta = document.createElement('div');
                 meta.className = 'q-meta';
-                meta.innerHTML = `<span class="q-number-main">No.${escapeHtml(String(log.no ?? '-'))}</span>`;
+                meta.innerHTML = `<span class="q-number-main">No.${escapeHtml(String(log.no ?? '-'))}</span><span class="q-master">(${escapeHtml(String(log.master ?? '-'))})</span>`;
 
                 const difficulty = document.createElement('span');
                 difficulty.className = 'badge-imp difficulty-badge';
