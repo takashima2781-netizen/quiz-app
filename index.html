@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.11 (表示 v10.13)
+Version : 1.0.12 (表示 v10.15)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -9,6 +9,11 @@ Version : 1.0.11 (表示 v10.13)
 仕様書・TODO・更新履歴は本コメントで管理し、別ファイルは原則作成しない。
 
 ■ 今回の更新
+・メインメニューをフラットなデザインに整理
+・メニュー内の絵文字を削除
+・主要ボタンの高さと間隔を統一
+・学習状況の修得表示を○○、チェック表示を✓に統一
+・タイマーをステータス行へ統合（ナンバー、難易度、履歴、タイマー、チェック、編集）
 ・制限時間を1行化し、mm:ss表示と細い進捗バーへ変更
 ・ステータス順を「ナンバー、難易度、履歴、チェック、編集」に統一
 ・履歴とチェックの囲み・ハイライトを削除
@@ -67,7 +72,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10.2</title>
+    <title>財務諸表論ドリル v10.15</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -163,14 +168,14 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .theme-label { font-size: 0.85em; color: #666; flex: 1; word-break: break-all; }
         .progress-label { font-size: 0.9em; font-weight: bold; color: var(--primary); white-space: nowrap; margin-left: 10px; }
         .question-layout { margin:2px 0 10px; padding:2px 0 10px; border-bottom:1px solid #ddd; }
-        .status-row { display:grid; grid-template-columns:minmax(58px,auto) 28px 32px 28px 30px; align-items:center; gap:8px; margin:0 0 8px; min-height:30px; }
+        .status-row { display:grid; grid-template-columns:minmax(54px,auto) 28px 34px minmax(50px,1fr) 28px 30px; align-items:center; gap:7px; margin:0 0 8px; min-height:30px; }
         .q-meta { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; min-width:0; font-size:.68em; font-weight:bold; color:#555; line-height:1.08; text-align:left; }
         .q-number-main { white-space:nowrap; }
         .q-master { color:#999; font-size:.88em; font-weight:600; margin-top:2px; }
         .difficulty-badge { width:28px; height:28px; display:flex; align-items:center; justify-content:center; padding:0; border-radius:6px; font-size:.76em; margin:0; }
         .compact-check { display:flex; align-items:center; justify-content:center; width:28px; height:28px; padding:0; border:0; background:transparent; border-radius:0; cursor:pointer; box-shadow:none; }
         .compact-check input { width:20px; height:20px; margin:0; cursor:pointer; accent-color:var(--primary); }
-        .status-row .history-label { min-width:28px; height:28px; display:flex; align-items:center; justify-content:center; padding:0; font-size:.82em; border:0; border-radius:0; background:transparent !important; }
+        .status-row .history-label { min-width:30px; height:28px; display:flex; align-items:center; justify-content:center; padding:0; font-size:1.02em; line-height:1; border:0; border-radius:0; background:transparent !important; }
         .question-main { min-width:0; }
         .question-main .question-area { margin:0; }
         .adjust-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0; border:0; background:transparent; color:#666; border-radius:0; cursor:pointer; box-shadow:none; }
@@ -186,11 +191,11 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         
 
         /* Timer */
-        .timer-panel { display:none; align-items:center; gap:10px; margin:2px 0 8px; padding:0; background:transparent; border:0; border-radius:0; }
-        .timer-top { display:flex; align-items:center; flex:0 0 auto; margin:0; }
+        .timer-panel { display:none; min-width:0; align-items:center; justify-content:center; }
+        .timer-top { display:flex; align-items:center; justify-content:center; margin:0; }
         .timer-label { display:none; }
-        .timer-clock { min-width:48px; font-size:.88em; font-weight:bold; color:var(--primary-dark); font-variant-numeric:tabular-nums; text-align:right; }
-        .timer-track { flex:1; width:auto; height:4px; background:#e0e0e0; border-radius:999px; overflow:hidden; }
+        .timer-clock { min-width:44px; font-size:.78em; font-weight:700; color:var(--primary-dark); font-variant-numeric:tabular-nums; text-align:center; line-height:1.1; }
+        .timer-track { width:100%; height:2px; margin-top:3px; background:#e0e0e0; border-radius:999px; overflow:hidden; }
         .timer-fill { width:0%; height:100%; background:var(--primary); transition:width .1s linear, background-color .2s; }
         .timer-panel.warning .timer-clock { color:#e65100; }
         .timer-panel.warning .timer-fill { background:#FF9800; }
@@ -361,6 +366,121 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             .source-actions { flex-direction:column; }
         }
 
+    
+        /* v10.15 Main menu: simple, flat, evenly spaced */
+        #top-menu-screen {
+            gap: 16px;
+            padding: 20px;
+        }
+        #top-menu-screen > h2 {
+            margin: 0 0 4px !important;
+            font-size: 1.65em;
+            line-height: 1.2;
+        }
+        #top-menu-screen .stats-box {
+            background: transparent;
+            border: 0;
+            border-top: 1px solid #e2e2e2;
+            border-bottom: 1px solid #e2e2e2;
+            border-radius: 0;
+            padding: 13px 2px;
+            line-height: 1.35;
+        }
+        .stats-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .stats-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 30px;
+            font-size: .98em;
+        }
+        .stats-row strong {
+            font-size: 1em;
+            white-space: nowrap;
+        }
+        .stats-row small {
+            font-size: .82em;
+            font-weight: 500;
+            color: #666;
+        }
+        .stats-symbol {
+            display: inline-block;
+            min-width: 30px;
+            text-align: center;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .mastered-symbol {
+            color: var(--primary-dark);
+            font-size: 1.08em;
+            letter-spacing: -2px;
+        }
+        .checked-symbol {
+            color: var(--text);
+            font-size: 1.15em;
+        }
+        .stats-alert {
+            color: var(--red);
+        }
+        #top-menu-screen .menu-btn-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin: 0;
+        }
+        #top-menu-screen .menu-btn {
+            width: 100%;
+            min-height: 58px;
+            padding: 13px 16px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            box-shadow: none;
+            transform: none;
+            font-size: 1.08em;
+            font-weight: 700;
+            letter-spacing: .01em;
+            transition: opacity .12s ease, background-color .12s ease;
+        }
+        #top-menu-screen .menu-btn:active {
+            transform: none;
+            box-shadow: none;
+            opacity: .72;
+        }
+        #top-menu-screen .menu-btn-test {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        #top-menu-screen .menu-btn-wb {
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+        #top-menu-screen .menu-btn-export {
+            background: #687f89;
+            border-color: #687f89;
+            color: #fff;
+        }
+        #top-menu-screen > div:last-child {
+            margin-top: 4px !important;
+            gap: 8px !important;
+        }
+        @media (max-width: 420px) {
+            #top-menu-screen {
+                gap: 14px;
+                padding: 18px;
+            }
+            #top-menu-screen > h2 {
+                font-size: 1.48em;
+            }
+            #top-menu-screen .menu-btn {
+                min-height: 54px;
+                font-size: 1em;
+            }
+        }
+
     </style>
     <!-- Shift-JISでのCSV再出力用。通信できない場合はUTF-8(BOM付き)へ自動フォールバックします。 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.2.0/encoding.min.js"></script>
@@ -369,7 +489,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.13</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.15</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -411,12 +531,9 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         <div class="stats-box" id="global-stats-top">読込中...</div>
         
         <div class="menu-btn-group">
-            <button class="menu-btn menu-btn-test" onclick="showTestSettings()">📝 財務諸表論 テスト</button>
-            <button class="menu-btn menu-btn-wb" onclick="showWorkbook()">📖 財務諸表論 問題集</button>
-        </div>
-
-        <div style="display:flex; flex-direction:column; gap:10px; margin-top:5px;">
-            <button class="utility-btn utility-download" onclick="openSourceManager()">📥 修正版CSVを書き出す</button>
+            <button class="menu-btn menu-btn-test" onclick="showTestSettings()">財務諸表論 テスト</button>
+            <button class="menu-btn menu-btn-wb" onclick="showWorkbook()">財務諸表論 問題集</button>
+            <button class="menu-btn menu-btn-export" onclick="openSourceManager()">修正版CSVを書き出す</button>
         </div>
         
         <div style="margin-top: 25px; display: flex; flex-direction: column; gap: 10px;">
@@ -548,20 +665,15 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             <div class="progress-label" id="q-progress">0 / 0</div>
         </div>
         
-        <div class="timer-panel" id="timer-panel" aria-live="polite">
-            <div class="timer-top">
-                <span class="timer-label">制限時間</span>
-                <span class="timer-clock" id="timer-clock">--</span>
-            </div>
-            <div class="timer-track" aria-hidden="true">
-                <div class="timer-fill" id="timer-fill"></div>
-            </div>
-        </div>
         <div class="question-layout">
             <div class="status-row" aria-label="問題情報">
                 <div class="q-meta" id="q-meta">No.-</div>
                 <div id="q-difficulty"></div>
                 <div class="history-label" id="q-history" aria-label="解答履歴"></div>
+                <div class="timer-panel" id="timer-panel" aria-live="polite">
+                    <div class="timer-top"><span class="timer-clock" id="timer-clock">--</span></div>
+                    <div class="timer-track" aria-hidden="true"><div class="timer-fill" id="timer-fill"></div></div>
+                </div>
                 <label class="compact-check" title="チェック" aria-label="チェック">
                     <input type="checkbox" id="q-checkbox" onchange="toggleCheck(event)">
                 </label>
@@ -1058,11 +1170,11 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             });
             let pct = total > 0 ? Math.round(mastered/total*100) : 0;
             
-            document.getElementById('global-stats-top').innerHTML = 
-                `<strong>全体の学習状況</strong><br>` +
-                `総問題数: ${total} 問<br>` +
-                `修得済 (👑2連勝): <strong style="color:var(--primary-dark); font-size:1.1em;">${mastered}</strong> 問 (${pct}%)<br>` +
-                `要復習 (☑️チェック): <strong style="color:var(--red)">${checked}</strong> 問`;
+            document.getElementById('global-stats-top').innerHTML =
+                `<div class="stats-title">全体の学習状況</div>` +
+                `<div class="stats-row"><span>総問題数</span><strong>${total}問</strong></div>` +
+                `<div class="stats-row"><span><span class="stats-symbol mastered-symbol">○○</span> 修得済み</span><strong>${mastered}問 <small>(${pct}%)</small></strong></div>` +
+                `<div class="stats-row"><span><span class="stats-symbol checked-symbol">✓</span> チェック</span><strong class="stats-alert">${checked}問</strong></div>`;
         }
 
         function setupThemes() {
