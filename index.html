@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.13 (表示 v10.18)
+Version : 1.0.14 (表示 v10.19)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -9,6 +9,11 @@ Version : 1.0.13 (表示 v10.18)
 仕様書・TODO・更新履歴は本コメントで管理し、別ファイルは原則作成しない。
 
 ■ 今回の更新
+・ゲーム風カウントダウン追加
+・GO!演出追加
+・効果音追加
+・タイマー開始タイミング改善
+・iPhone最適化
 ・テスト開始前に「3・2・1・GO!」のカウントダウン演出を追加
 ・カウントダウン専用の短い電子音を追加（振動なし）
 ・GO!終了後に問題表示と制限時間タイマーを開始
@@ -84,7 +89,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10.18</title>
+    <title>財務諸表論ドリル v10.19</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -703,7 +708,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         }
 
 
-        /* v10.18 Start countdown */
+        /* v10.19 Mario Kart-style start countdown */
         .start-countdown {
             position:fixed;
             inset:0;
@@ -712,7 +717,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             align-items:center;
             justify-content:center;
             overflow:hidden;
-            background:rgba(0,0,0,.76);
+            background:rgba(0,0,0,.45);
             color:#fff;
             user-select:none;
             -webkit-user-select:none;
@@ -727,39 +732,41 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             min-width:1.4em;
             text-align:center;
             font-family:Arial, "Helvetica Neue", sans-serif;
-            font-size:clamp(96px, 32vw, 190px);
+            font-size:clamp(104px, 30vw, 120px);
             font-weight:800;
             line-height:1;
             letter-spacing:-.06em;
             text-shadow:0 4px 24px rgba(0,0,0,.4);
-            transform:scale(.72);
+            transform:scale(.7);
             opacity:0;
         }
         .start-countdown-value.is-number {
-            animation:countdownNumber .56s cubic-bezier(.18,.82,.2,1) both;
+            animation:countdownNumber .45s cubic-bezier(.18,.82,.2,1) both;
         }
         .start-countdown-value.is-go {
             min-width:auto;
-            font-size:clamp(76px, 25vw, 150px);
+            font-size:clamp(116px, 34vw, 140px);
             letter-spacing:-.04em;
-            animation:countdownGo .62s cubic-bezier(.16,.84,.2,1) both;
+            color:#b7ff35;
+            text-shadow:0 0 12px rgba(183,255,53,.9), 0 0 30px rgba(183,255,53,.55), 0 4px 24px rgba(0,0,0,.35);
+            animation:countdownGo .65s cubic-bezier(.16,.84,.2,1) both;
         }
         @keyframes countdownNumber {
-            0%   { opacity:0; transform:scale(.58); }
-            20%  { opacity:1; transform:scale(1.08); }
-            56%  { opacity:1; transform:scale(1); }
-            100% { opacity:0; transform:scale(1.16); }
+            0%   { opacity:0; transform:scale(.7); }
+            28%  { opacity:1; transform:scale(1.18); }
+            62%  { opacity:1; transform:scale(1); }
+            100% { opacity:0; transform:scale(1); }
         }
         @keyframes countdownGo {
-            0%   { opacity:0; transform:scale(.56); }
-            22%  { opacity:1; transform:scale(1.12); }
-            65%  { opacity:1; transform:scale(1); }
-            100% { opacity:0; transform:scale(1.22); }
+            0%   { opacity:0; transform:scale(.7); }
+            24%  { opacity:1; transform:scale(1.18); }
+            62%  { opacity:1; transform:scale(1); }
+            100% { opacity:0; transform:scale(1); }
         }
         @media (prefers-reduced-motion: reduce) {
             .start-countdown-value.is-number,
             .start-countdown-value.is-go {
-                animation:countdownFade .56s linear both;
+                animation:countdownFade .45s linear both;
             }
             @keyframes countdownFade {
                 0%,100% { opacity:0; }
@@ -775,7 +782,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.18</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.19</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -1873,10 +1880,10 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             overlay.setAttribute('aria-hidden', 'false');
 
             const steps = [
-                { text:'3', className:'is-number', duration:600, isGo:false },
-                { text:'2', className:'is-number', duration:600, isGo:false },
-                { text:'1', className:'is-number', duration:600, isGo:false },
-                { text:'GO!', className:'is-go', duration:660, isGo:true }
+                { text:'3', className:'is-number', duration:450, isGo:false },
+                { text:'2', className:'is-number', duration:450, isGo:false },
+                { text:'1', className:'is-number', duration:450, isGo:false },
+                { text:'GO!', className:'is-go', duration:650, isGo:true }
             ];
 
             for (const step of steps) {
@@ -1896,7 +1903,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
         async function startQuiz() {
             saveSoundSettings();
-            unlockAudio();
+            await unlockAudio();
             activeQuestions = getFilteredTestQuestions();
             if (activeQuestions.length === 0) { alert("該当する問題がありません！"); return; }
 
@@ -1916,6 +1923,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             questionTimeLimit = Number(document.getElementById('select-time-limit').value) || 0;
             studyStyle = document.getElementById('select-study-style')?.value || 'learning';
             clearAutoNext();
+            stopQuestionTimer();
             currentIndex = 0; sessionCorrect = 0; sessionHistory = [];
             switchScreen('quiz');
             await runStartCountdown();
