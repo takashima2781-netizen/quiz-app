@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.12 (表示 v10.15)
+Version : 1.0.12 (表示 v10.16)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -9,6 +9,10 @@ Version : 1.0.12 (表示 v10.15)
 仕様書・TODO・更新履歴は本コメントで管理し、別ファイルは原則作成しない。
 
 ■ 今回の更新
+・テーマ直下にステータス行を上詰め配置
+・ステータス行の下に区切り線を配置
+・タイマーに線画の時計アイコンを追加
+・時間制限なしでもタイマー領域を保持し、チェックと編集の位置を固定
 ・メインメニューをフラットなデザインに整理
 ・メニュー内の絵文字を削除
 ・主要ボタンの高さと間隔を統一
@@ -72,7 +76,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10.15</title>
+    <title>財務諸表論ドリル v10.16</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -164,11 +168,28 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .badge-imp { background-color: #FF9800; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; font-weight: bold; }
 
         /* Quiz Screen */
-        .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px; gap: 10px;}
-        .theme-label { font-size: 0.85em; color: #666; flex: 1; word-break: break-all; }
-        .progress-label { font-size: 0.9em; font-weight: bold; color: var(--primary); white-space: nowrap; margin-left: 10px; }
-        .question-layout { margin:2px 0 10px; padding:2px 0 10px; border-bottom:1px solid #ddd; }
-        .status-row { display:grid; grid-template-columns:minmax(54px,auto) 28px 34px minmax(50px,1fr) 28px 30px; align-items:center; gap:7px; margin:0 0 8px; min-height:30px; }
+        .quiz-header {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            border-bottom:0;
+            padding-bottom:2px;
+            margin-bottom:2px;
+            gap:10px;
+        }
+        .theme-label { font-size:0.85em; color:#666; flex:1; word-break:break-all; }
+        .progress-label { font-size:0.9em; font-weight:bold; color:var(--primary); white-space:nowrap; margin-left:10px; }
+        .question-layout { margin:0 0 10px; padding:0 0 10px; border-bottom:0; }
+        .status-row {
+            display:grid;
+            grid-template-columns:minmax(54px,auto) 28px 34px minmax(92px,1fr) 28px 30px;
+            align-items:center;
+            gap:7px;
+            min-height:34px;
+            margin:0 0 7px;
+            padding:2px 0 7px;
+            border-bottom:1px solid #ddd;
+        }
         .q-meta { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; min-width:0; font-size:.68em; font-weight:bold; color:#555; line-height:1.08; text-align:left; }
         .q-number-main { white-space:nowrap; }
         .q-master { color:#999; font-size:.88em; font-weight:600; margin-top:2px; }
@@ -187,14 +208,45 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .checkbox-container input { cursor: pointer; transform: scale(1.2); }
         .checkbox-label { font-size: 0.8em; font-weight: bold; color: #f57f17; }
         .history-label { font-size: 0.85em; font-weight: bold; color: #888; background: #f0f0f0; padding: 3px 8px; border-radius: 10px; }
-        .question { font-size: 1.15em; line-height: 1.6; min-height: 100px; padding-top: 15px; }
+        .question { font-size:1.15em; line-height:1.6; min-height:100px; padding-top:5px; }
         
 
         /* Timer */
-        .timer-panel { display:none; min-width:0; align-items:center; justify-content:center; }
-        .timer-top { display:flex; align-items:center; justify-content:center; margin:0; }
-        .timer-label { display:none; }
-        .timer-clock { min-width:44px; font-size:.78em; font-weight:700; color:var(--primary-dark); font-variant-numeric:tabular-nums; text-align:center; line-height:1.1; }
+        .timer-panel {
+            display:flex;
+            min-width:92px;
+            width:100%;
+            flex-direction:column;
+            justify-content:center;
+            visibility:visible;
+        }
+        .timer-panel.is-disabled { visibility:hidden; }
+        .timer-main {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:5px;
+            width:100%;
+        }
+        .timer-icon {
+            width:17px;
+            height:17px;
+            flex:0 0 17px;
+            fill:none;
+            stroke:#555;
+            stroke-width:1.7;
+            stroke-linecap:round;
+            stroke-linejoin:round;
+        }
+        .timer-clock {
+            min-width:43px;
+            font-size:.78em;
+            font-weight:700;
+            color:var(--primary-dark);
+            font-variant-numeric:tabular-nums;
+            text-align:right;
+            line-height:1.1;
+        }
         .timer-track { width:100%; height:2px; margin-top:3px; background:#e0e0e0; border-radius:999px; overflow:hidden; }
         .timer-fill { width:0%; height:100%; background:var(--primary); transition:width .1s linear, background-color .2s; }
         .timer-panel.warning .timer-clock { color:#e65100; }
@@ -367,7 +419,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         }
 
     
-        /* v10.15 Main menu: simple, flat, evenly spaced */
+        /* v10.16 Main menu: simple, flat, evenly spaced */
         #top-menu-screen {
             gap: 16px;
             padding: 20px;
@@ -489,7 +541,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.15</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.16</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -671,7 +723,13 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
                 <div id="q-difficulty"></div>
                 <div class="history-label" id="q-history" aria-label="解答履歴"></div>
                 <div class="timer-panel" id="timer-panel" aria-live="polite">
-                    <div class="timer-top"><span class="timer-clock" id="timer-clock">--</span></div>
+                    <div class="timer-main">
+                        <svg class="timer-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <circle cx="12" cy="12" r="8.5"></circle>
+                            <path d="M12 7.5v5l3.5 2"></path>
+                        </svg>
+                        <span class="timer-clock" id="timer-clock">--:--</span>
+                    </div>
                     <div class="timer-track" aria-hidden="true"><div class="timer-fill" id="timer-fill"></div></div>
                 </div>
                 <label class="compact-check" title="チェック" aria-label="チェック">
@@ -1605,11 +1663,13 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             panel.classList.remove('warning', 'danger');
             document.getElementById('timer-fill').style.width = '0%';
             if (!questionTimeLimit) {
-                panel.style.display = 'none';
-                document.getElementById('timer-clock').textContent = '--';
+                panel.style.display = 'flex';
+                panel.classList.add('is-disabled');
+                document.getElementById('timer-clock').textContent = '--:--';
                 return;
             }
-            panel.style.display = 'block';
+            panel.style.display = 'flex';
+            panel.classList.remove('is-disabled');
             document.getElementById('timer-clock').textContent = formatTimerClock(questionTimeLimit);
             questionTimerStartedAt = Date.now();
             questionTimerId = setInterval(updateQuestionTimer, 100);
