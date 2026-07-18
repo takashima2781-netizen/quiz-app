@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.4 (表示 v10.4)
+Version : 1.0.5 (表示 v10.5)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -120,14 +120,17 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px; gap: 10px;}
         .theme-label { font-size: 0.85em; color: #666; flex: 1; word-break: break-all; }
         .progress-label { font-size: 0.9em; font-weight: bold; color: var(--primary); white-space: nowrap; margin-left: 10px; }
-        .q-meta { display:flex; align-items:center; gap:6px; min-width:0; font-size:.82em; font-weight:bold; color:#555; }
-        .q-status-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 6px; min-height:34px; }
-        .q-status-actions { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-shrink:0; }
+        .question-layout { display:grid; grid-template-columns:54px minmax(0,1fr) 42px; gap:8px; align-items:start; margin:4px 0 10px; padding:4px 0 10px; border-bottom:1px solid #ddd; }
+        .question-side { display:flex; flex-direction:column; align-items:center; gap:5px; min-width:0; padding-top:2px; }
+        .q-meta { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0; font-size:.68em; font-weight:bold; color:#555; line-height:1.15; text-align:center; }
         .q-number { white-space:nowrap; }
-        .compact-check { display:flex; align-items:center; justify-content:center; width:34px; height:34px; padding:0; border:1px solid #fbc02d; background:#fff9c4; border-radius:10px; cursor:pointer; }
-        .compact-check input { width:20px; height:20px; margin:0; cursor:pointer; accent-color:var(--primary); }
-        .q-status-row .history-label { min-width:28px; height:28px; display:flex; align-items:center; justify-content:center; padding:0 5px; font-size:.8em; }
-        .q-status-row .mini-edit-btn { padding:6px 10px; min-height:32px; white-space:nowrap; }
+        .compact-check { display:flex; align-items:center; justify-content:center; width:28px; height:28px; padding:0; border:1px solid #c8c8c8; background:#fff; border-radius:7px; cursor:pointer; }
+        .compact-check input { width:18px; height:18px; margin:0; cursor:pointer; accent-color:var(--primary); }
+        .question-side .history-label { min-width:28px; height:22px; display:flex; align-items:center; justify-content:center; padding:0 3px; font-size:.72em; border-radius:6px; }
+        .question-main { min-width:0; }
+        .question-main .question-area { margin:0; }
+        .gear-edit-btn { width:38px; height:38px; display:flex; align-items:center; justify-content:center; padding:0; border:1px solid #cfcfcf; background:#fff; color:#555; border-radius:50%; font-size:22px; line-height:1; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.08); }
+        .gear-edit-btn:active { transform:scale(.96); background:#f2f2f2; }
         .question-area { position: relative; margin-top: 5px; }
         .status-container { position: absolute; top: -45px; right: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
         .checkbox-container { display: flex; align-items: center; gap: 5px; background: #fff9c4; padding: 5px 10px; border-radius: 20px; border: 1px solid #fbc02d; cursor: pointer; user-select: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -287,10 +290,9 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             header { padding:14px 55px; min-height:50px; }
             #header-back-btn { left:8px; }
             .container { width:96%; padding:15px; margin-top:12px; }
-            .q-status-row { gap:5px; margin:6px 0 4px; }
-            .q-status-actions { gap:4px; }
-            .q-status-row .mini-edit-btn { padding:5px 8px; font-size:.76em; }
-            .q-status-row .badge-imp { font-size:.72em; padding:3px 7px; }
+            .question-layout { grid-template-columns:48px minmax(0,1fr) 38px; gap:6px; margin-top:2px; padding-bottom:8px; }
+            .gear-edit-btn { width:36px; height:36px; font-size:20px; }
+            .q-meta { font-size:.64em; }
             .question { padding-top:0; min-height:80px; font-size:1.05em; }
             .quiz-header { align-items:flex-start; }
             .history-list li { padding:10px 6px; }
@@ -469,17 +471,6 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             <div class="progress-label" id="q-progress">0 / 0</div>
         </div>
         
-        <div class="q-status-row">
-            <div class="q-meta" id="q-meta">No.-(-)</div>
-            <div class="q-status-actions">
-                <label class="compact-check" title="チェック" aria-label="チェック">
-                    <input type="checkbox" id="q-checkbox" onchange="toggleCheck(event)">
-                </label>
-                <div class="history-label" id="q-history" aria-label="解答履歴"></div>
-                <button class="mini-edit-btn" onclick="openQuestionEditorFromQuiz()">編集</button>
-            </div>
-        </div>
-
         <div class="timer-panel" id="timer-panel" aria-live="polite">
             <div class="timer-top">
                 <span class="timer-label">制限時間</span>
@@ -489,8 +480,22 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
                 <div class="timer-fill" id="timer-fill"></div>
             </div>
         </div>
-        <div class="question-area">
-            <div class="question" id="q-text">問題を読み込んでいます...</div>
+        <div class="question-layout">
+            <div class="question-side" aria-label="問題情報">
+                <div class="q-meta" id="q-meta">No.-(-)</div>
+                <label class="compact-check" title="チェック" aria-label="チェック">
+                    <input type="checkbox" id="q-checkbox" onchange="toggleCheck(event)">
+                </label>
+                <div class="history-label" id="q-history" aria-label="解答履歴"></div>
+            </div>
+            <div class="question-main">
+                <div class="question-area">
+                    <div class="question" id="q-text">問題を読み込んでいます...</div>
+                </div>
+            </div>
+            <div class="question-side">
+                <button class="gear-edit-btn" onclick="openQuestionEditorFromQuiz()" title="編集" aria-label="問題を編集">⚙</button>
+            </div>
         </div>
         
         <div class="action-wrapper" id="action-wrapper">
