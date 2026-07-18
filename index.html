@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.17 (表示 v10.22)
+Version : 1.0.17 (表示 v10.23)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -94,7 +94,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10.22</title>
+    <title>財務諸表論ドリル v10.23</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -189,6 +189,41 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .badge-4c { background-color: var(--blue); }
         .badge-sort { background-color: #9C27B0; }
         .badge-imp { background-color: #FF9800; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; font-weight: bold; }
+
+
+        /* v10.23 Summary history: unified metadata and actions */
+        .history-list { padding:4px 10px; background:#fff; border-color:#d9d9d9; border-radius:8px; }
+        .history-list li { padding:14px 2px; gap:10px; background:#fff; }
+        .history-list li:hover, .history-list li:active { background:#f7f7f7; }
+        .list-left { gap:9px; min-width:0; }
+        .res-icon { width:32px; margin-top:1px; font-size:1.55em; line-height:1; }
+        .summary-item-body { min-width:0; flex:1; }
+        .summary-meta-line { display:flex; align-items:center; gap:5px; min-width:0; margin-bottom:5px; flex-wrap:wrap; }
+        .meta-chip { display:inline-flex; align-items:center; justify-content:center; min-height:24px; padding:2px 8px; border:1px solid #d8d8d8; border-radius:999px; background:#fff; color:#444; font-size:.72em; font-weight:700; line-height:1; white-space:nowrap; }
+        .meta-chip.type { border-color:#b9dcbc; background:#f2faf2; color:#2f7d35; }
+        .meta-chip.importance { border-color:#ecd39e; background:#fff9e9; color:#9a6700; }
+        .meta-chip.number { color:#333; }
+        .meta-chip.history-good { border-color:#cce6cf; background:#f1f9f2; color:#2f7d35; }
+        .meta-chip.history-bad { border-color:#f1c9ce; background:#fff3f4; color:#c63b47; }
+        .meta-chip.history-none { background:#f7f7f7; color:#777; }
+        .summary-question-preview { font-size:.88em; line-height:1.45; color:#333; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+        .list-right { gap:7px; align-items:stretch; width:70px; }
+        .list-action { min-height:32px; padding:5px 7px; border:1px solid #d4d4d4; border-radius:999px; background:#fff; color:#555; font-size:.72em; font-weight:700; display:flex; align-items:center; justify-content:center; gap:3px; cursor:pointer; }
+        .list-action:active { background:#f3f3f3; }
+        .list-action input { width:16px; height:16px; margin:0; accent-color:var(--primary); }
+        .list-edit-btn { font:inherit; }
+        .modal-meta-wrap { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding-right:36px; margin-bottom:12px; }
+        .modal-actions { display:flex; gap:7px; flex-wrap:wrap; margin-left:auto; }
+        .modal-action-btn { min-height:34px; padding:6px 11px; border:1px solid #d4d4d4; border-radius:999px; background:#fff; color:#444; font-size:.78em; font-weight:700; cursor:pointer; }
+        .modal-action-btn:active { background:#f3f3f3; }
+        .modal-check { display:flex; align-items:center; gap:5px; }
+        .modal-check input { width:18px; height:18px; margin:0; accent-color:var(--primary); }
+        @media (max-width:420px) {
+            .history-list { padding-left:8px; padding-right:8px; }
+            .history-list li { padding:12px 0; }
+            .list-right { width:64px; }
+            .meta-chip { padding:2px 7px; font-size:.68em; }
+        }
 
         /* Quiz Screen */
         .quiz-header {
@@ -792,7 +827,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.22</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.23</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -1045,7 +1080,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px;">
             <h3 style="margin: 0; font-size: 1.1em; text-align: left;">今回の学習履歴</h3>
-            <span style="font-size: 0.75em; color: #666; text-align: right;">左側タップで詳細表示<br>右側で直接チェック</span>
+            <span style="font-size: 0.75em; color: #666; text-align: right;">問題をタップして詳細表示<br>右側からチェック・編集</span>
         </div>
         
         <ul class="history-list" id="session-log"></ul>
@@ -1056,15 +1091,15 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         <div class="modal-content">
             <span class="close-btn" onclick="closeDetail()">&times;</span>
             
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; padding-right: 30px;">
-                <div class="q-meta" id="modal-meta" style="margin-bottom: 0;"></div>
-                
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <label class="checkbox-container" style="position: static; padding: 4px 10px;">
+            <div class="modal-meta-wrap">
+                <div id="modal-meta" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+                <div class="modal-actions">
+                    <div class="meta-chip history-none" id="modal-history">履歴 -</div>
+                    <label class="modal-action-btn modal-check">
                         <input type="checkbox" id="modal-checkbox" onchange="toggleModalCheck(event)">
-                        <span class="checkbox-label">チェック</span>
+                        <span>チェック</span>
                     </label>
-                    <div class="history-label" id="modal-history" style="margin: 0;">履歴: -</div>
+                    <button type="button" class="modal-action-btn" onclick="editCurrentModalQuestion()">編集</button>
                 </div>
             </div>
             
@@ -2199,51 +2234,73 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         }
         
         // --- Summary & Modal ---
+        function historyStateFor(u) {
+            if (!u.played) return { text:'未解答', cls:'history-none' };
+            if (u.streak >= 2) return { text:'○○', cls:'history-good' };
+            if (u.streak === 1) return { text:'○', cls:'history-good' };
+            return { text:'×', cls:'history-bad' };
+        }
+
+        function typeLabel(type) {
+            if (type === 'ox') return '○×';
+            if (type === '4c') return '4択';
+            if (type === 'sort') return '並べ替え';
+            return type || '-';
+        }
+
         function renderSummaryList() {
             const logContainer = document.getElementById('session-log');
             logContainer.innerHTML = '';
-            
+
             sessionHistory.forEach((log, index) => {
                 const u = getUserData(log.id);
-                let li = document.createElement('li');
-                
-                let leftDiv = document.createElement('div'); leftDiv.className = 'list-left';
+                const historyState = historyStateFor(u);
+                const li = document.createElement('li');
+
+                const leftDiv = document.createElement('div');
+                leftDiv.className = 'list-left';
                 leftDiv.onclick = () => openModalFromSummary(index);
-                
-                let icon = log.isCorrect ? '<span class="res-icon res-correct">⭕</span>' : '<span class="res-icon res-incorrect">❌</span>';
-                
-                let typeBadge = '';
-                if (log.type === 'ox') typeBadge = `<span class="badge-type badge-ox">〇×</span>`;
-                else if (log.type === '4c') typeBadge = `<span class="badge-type badge-4c">4択</span>`;
-                else if (log.type === 'sort') typeBadge = `<span class="badge-type badge-sort">並替</span>`;
-                
-                let impBadge = `<span class="badge-imp">重要度 ${log.importance || '-'}</span>`;
-                let shortQ = log.qText.length > 25 ? log.qText.substring(0, 25) + '...' : log.qText;
-                
-                leftDiv.innerHTML = `${icon}<div style="font-size:0.9em;">${typeBadge}${impBadge}<strong>No.${log.no}</strong> <span style="font-size:0.85em; color:#888;">(M${log.master})</span><br>${shortQ}</div>`;
-                
-                let rightDiv = document.createElement('div'); rightDiv.className = 'list-right';
-                
-                let histText = "未解答";
-                if (u.played) {
-                    if (u.streak >= 2) histText = "○○"; else if (u.streak === 1) histText = "〇"; else histText = "✕"; 
-                }
-                let histBg = (histText === "○○" || histText === "〇") ? "#e8f5e9" : (histText === "✕" ? "#ffebee" : "#f0f0f0");
-                let histColor = (histText === "○○" || histText === "〇") ? "var(--primary-dark)" : (histText === "✕" ? "var(--red)" : "#888");
-                
-                let histBadge = document.createElement('div');
-                histBadge.innerText = `履歴:${histText}`;
-                histBadge.style.fontSize = '0.7em'; histBadge.style.fontWeight = 'bold'; histBadge.style.padding = '2px 6px'; histBadge.style.borderRadius = '10px'; histBadge.style.background = histBg; histBadge.style.color = histColor;
-                
-                let chkContainer = document.createElement('label'); chkContainer.className = 'list-chk-container';
-                chkContainer.onclick = (e) => e.stopPropagation(); 
-                let chkInput = document.createElement('input'); chkInput.type = 'checkbox'; chkInput.checked = u.checked; chkInput.style.transform = 'scale(1.1)';
-                chkInput.onchange = (e) => { u.checked = e.target.checked; saveData(); };
-                
-                let chkSpan = document.createElement('span'); chkSpan.innerText = '確認';
-                chkContainer.appendChild(chkInput); chkContainer.appendChild(chkSpan);
-                rightDiv.appendChild(histBadge); rightDiv.appendChild(chkContainer);
-                li.appendChild(leftDiv); li.appendChild(rightDiv);
+
+                const icon = log.isCorrect
+                    ? '<span class="res-icon res-correct">○</span>'
+                    : '<span class="res-icon res-incorrect">×</span>';
+                const shortQ = log.qText.length > 46 ? log.qText.substring(0, 46) + '…' : log.qText;
+                leftDiv.innerHTML = `${icon}
+                    <div class="summary-item-body">
+                        <div class="summary-meta-line">
+                            <span class="meta-chip type">${typeLabel(log.type)}</span>
+                            <span class="meta-chip importance">重要度 ${escapeHtml(log.importance || '-')}</span>
+                            <span class="meta-chip number">No.${escapeHtml(String(log.no ?? '-'))}</span>
+                            <span class="meta-chip ${historyState.cls}">履歴 ${historyState.text}</span>
+                        </div>
+                        <div class="summary-question-preview">${escapeHtml(shortQ)}</div>
+                    </div>`;
+
+                const rightDiv = document.createElement('div');
+                rightDiv.className = 'list-right';
+
+                const chkContainer = document.createElement('label');
+                chkContainer.className = 'list-action';
+                chkContainer.onclick = e => e.stopPropagation();
+                const chkInput = document.createElement('input');
+                chkInput.type = 'checkbox';
+                chkInput.checked = u.checked;
+                chkInput.onchange = e => { u.checked = e.target.checked; saveData(); };
+                const chkSpan = document.createElement('span');
+                chkSpan.innerText = 'チェック';
+                chkContainer.append(chkInput, chkSpan);
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'list-action list-edit-btn';
+                editBtn.innerText = '編集';
+                editBtn.onclick = e => {
+                    e.stopPropagation();
+                    openQuestionEditorById(log.id);
+                };
+
+                rightDiv.append(chkContainer, editBtn);
+                li.append(leftDiv, rightDiv);
                 logContainer.appendChild(li);
             });
         }
@@ -2252,13 +2309,13 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             currentModalQId = qObj.id; 
             const u = getUserData(qObj.id);
             
-            let typeBadge = '';
-            if (qObj.type === 'ox') typeBadge = `<span class="badge-type badge-ox">〇×</span>`;
-            else if (qObj.type === '4c') typeBadge = `<span class="badge-type badge-4c">4択</span>`;
-            else if (qObj.type === 'sort') typeBadge = `<span class="badge-type badge-sort">並替</span>`;
-            
-            let impBadge = `<span class="badge-imp">重要度 ${qObj.importance || '-'}</span>`;
-            document.getElementById('modal-meta').innerHTML = `${typeBadge}${impBadge} No.${qObj.n} (マスターNo.${qObj.m})`;
+            const displayNo = qObj.n ?? qObj.no ?? '-';
+            const displayMaster = qObj.m ?? qObj.master ?? '-';
+            document.getElementById('modal-meta').innerHTML = `
+                <span class="meta-chip type">${typeLabel(qObj.type)}</span>
+                <span class="meta-chip importance">重要度 ${escapeHtml(qObj.importance || '-')}</span>
+                <span class="meta-chip number">No.${escapeHtml(String(displayNo))}</span>
+                <span class="meta-chip number">M${escapeHtml(String(displayMaster))}</span>`;
             
             document.getElementById('modal-checkbox').checked = u.checked;
             let histText = "未解答";
@@ -2266,10 +2323,9 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
                 if (u.streak >= 2) histText = "○○"; else if (u.streak === 1) histText = "〇"; else histText = "✕"; 
             }
             const histLabel = document.getElementById('modal-history');
-            histLabel.innerText = `履歴: ${histText}`;
-            if (histText === "○○" || histText === "〇") { histLabel.style.color = "var(--primary-dark)"; histLabel.style.background = "#e8f5e9"; } 
-            else if (histText === "✕") { histLabel.style.color = "var(--red)"; histLabel.style.background = "#ffebee"; } 
-            else { histLabel.style.color = "#888"; histLabel.style.background = "#f0f0f0"; }
+            const hs = historyStateFor(u);
+            histLabel.innerText = `履歴 ${hs.text}`;
+            histLabel.className = `meta-chip ${hs.cls}`;
             
             document.getElementById('modal-q').innerText = qObj.question || qObj.qText;
             document.getElementById('modal-a').innerHTML = userAnswerHtml;
@@ -2291,9 +2347,14 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         function openModalFromWorkbook(qId) {
             isModalFromWorkbook = true;
             const q = allData.find(item => item.id === qId);
-            let aHtml = `<div>正解: <strong style="color:var(--primary-dark); display:block; padding-top:5px;">${q.answer}</strong></div>
-                <button class="mini-edit-btn" style="margin-top:12px; width:100%;" onclick="openQuestionEditorById('${q.id}')">✏️ この問題を編集</button>`;
+            let aHtml = `<div>正解: <strong style="color:var(--primary-dark); display:block; padding-top:5px;">${q.answer}</strong></div>`;
             populateModal(q, aHtml);
+        }
+
+        function editCurrentModalQuestion() {
+            if (!currentModalQId) return;
+            closeDetail();
+            openQuestionEditorById(currentModalQId);
         }
 
         function toggleModalCheck(e) {
