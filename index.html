@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.1 (表示 v10.1)
+Version : 1.0.4 (表示 v10.4)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -9,12 +9,18 @@ Version : 1.0.1 (表示 v10.1)
 仕様書・TODO・更新履歴は本コメントで管理し、別ファイルは原則作成しない。
 
 ■ 今回の更新
+・問題画面のステータス行を省スペース化
+・表示を No.／重要度／チェック／履歴／編集の1行に集約
+・履歴表示を簡略化（○○／○／×／空欄）
 ・学習モード追加
 ・トレーニングモード追加
 ・自動送り機能追加
 ・自動送り停止ボタン追加
 ・学習スタイル選択追加
 ・正誤判定時の薄い○×エフェクト追加（正解：赤／不正解：青）
+・緑色ヘッダーをスクロール時も固定
+・学習スタイル欄を簡素化（青い囲い・補足説明を削除）
+・効果音のON/OFFをiPhone風スイッチに変更
 
 ■ 現在のTODO
 【高】
@@ -49,12 +55,12 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10（学習・トレーニングモード対応）</title>
+    <title>財務諸表論ドリル v10.2</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; color: var(--text); }
-        header { background-color: var(--primary); color: white; width: 100%; padding: 15px 0; text-align: center; font-size: 1.2em; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; z-index: 100;}
+        header { background-color: var(--primary); color: white; width: 100%; padding: 15px 0; text-align: center; font-size: 1.2em; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;}
         #header-back-btn { position: absolute; left: 15px; top: 12px; background: none; border: 1px solid white; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; display: none; font-size: 0.9em; transition: 0.2s;}
         #header-back-btn:active { background: white; color: var(--primary); }
         
@@ -114,7 +120,14 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px; gap: 10px;}
         .theme-label { font-size: 0.85em; color: #666; flex: 1; word-break: break-all; }
         .progress-label { font-size: 0.9em; font-weight: bold; color: var(--primary); white-space: nowrap; margin-left: 10px; }
-        .q-meta { font-size: 0.85em; font-weight: bold; color: #555; background: #eee; display: inline-block; padding: 3px 8px; border-radius: 12px; margin-bottom: 10px; }
+        .q-meta { display:flex; align-items:center; gap:6px; min-width:0; font-size:.82em; font-weight:bold; color:#555; }
+        .q-status-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 6px; min-height:34px; }
+        .q-status-actions { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-shrink:0; }
+        .q-number { white-space:nowrap; }
+        .compact-check { display:flex; align-items:center; justify-content:center; width:34px; height:34px; padding:0; border:1px solid #fbc02d; background:#fff9c4; border-radius:10px; cursor:pointer; }
+        .compact-check input { width:20px; height:20px; margin:0; cursor:pointer; accent-color:var(--primary); }
+        .q-status-row .history-label { min-width:28px; height:28px; display:flex; align-items:center; justify-content:center; padding:0 5px; font-size:.8em; }
+        .q-status-row .mini-edit-btn { padding:6px 10px; min-height:32px; white-space:nowrap; }
         .question-area { position: relative; margin-top: 5px; }
         .status-container { position: absolute; top: -45px; right: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
         .checkbox-container { display: flex; align-items: center; gap: 5px; background: #fff9c4; padding: 5px 10px; border-radius: 20px; border: 1px solid #fbc02d; cursor: pointer; user-select: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -137,8 +150,16 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .timer-panel.danger .timer-fill { background:var(--red); }
 
         /* v10: Study style / training auto-next */
-        .study-style-box { background:#eef7ff; border:1px solid #bbdefb; padding:12px; border-radius:8px; }
-        .study-style-help { margin-top:6px; color:#607d8b; font-size:.82em; line-height:1.5; }
+        .study-style-box { margin-top:10px; }
+        .sound-settings-box { margin-top:8px; padding:10px 12px; background:#f7f7f7; border-radius:8px; border:1px solid #ddd; }
+        .sound-settings-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+        .sound-toggle-btn { position:relative; width:52px; height:31px; padding:0; border:0; border-radius:999px; cursor:pointer; background:#8e8e93; box-shadow:none; transition:background-color .2s ease; flex:0 0 auto; }
+        .sound-toggle-btn::after { content:""; position:absolute; top:2px; left:2px; width:27px; height:27px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.28); transition:transform .2s ease; }
+        .sound-toggle-btn.is-on { background:#34c759; }
+        .sound-toggle-btn.is-on::after { transform:translateX(21px); }
+        .sound-toggle-btn:focus-visible { outline:3px solid rgba(52,199,89,.28); outline-offset:3px; }
+        .sound-preview-row { display:flex; gap:8px; }
+        .sound-preview-row button { flex:1; padding:8px 6px; border:none; border-radius:7px; font-weight:bold; }
         .training-feedback { display:none; margin-top:10px; padding:10px 12px; border-radius:8px; font-weight:bold; text-align:center; }
         .training-feedback.correct { display:block; background:#e8f5e9; color:var(--primary-dark); border:1px solid #a5d6a7; }
         .training-feedback.incorrect { display:block; background:#ffebee; color:#c62828; border:1px solid #ef9a9a; }
@@ -239,7 +260,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .utility-btn:active { transform: translateY(4px); box-shadow: none; }
         .utility-edit { background: #FF9800; box-shadow: 0 4px 0 #F57C00; }
         .utility-download { background: #607D8B; box-shadow: 0 4px 0 #455A64; }
-        .quiz-tools { display:flex; justify-content:flex-end; margin-top:-5px; }
+        .quiz-tools { display:none; }
         .mini-edit-btn { border:1px solid #FF9800; background:#fff8e1; color:#e65100; border-radius:18px; padding:7px 12px; font-size:.82em; font-weight:bold; cursor:pointer; }
         .edited-badge { display:inline-block; background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:4px; padding:2px 6px; margin-right:5px; font-size:.75em; font-weight:bold; }
         .edit-form { display:flex; flex-direction:column; gap:12px; }
@@ -266,7 +287,10 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             header { padding:14px 55px; min-height:50px; }
             #header-back-btn { left:8px; }
             .container { width:96%; padding:15px; margin-top:12px; }
-            .status-container { position:static; flex-direction:row; align-items:center; justify-content:space-between; margin-bottom:8px; }
+            .q-status-row { gap:5px; margin:6px 0 4px; }
+            .q-status-actions { gap:4px; }
+            .q-status-row .mini-edit-btn { padding:5px 8px; font-size:.76em; }
+            .q-status-row .badge-imp { font-size:.72em; padding:3px 7px; }
             .question { padding-top:0; min-height:80px; font-size:1.05em; }
             .quiz-header { align-items:flex-start; }
             .history-list li { padding:10px 6px; }
@@ -283,7 +307,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.2</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -367,15 +391,12 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             </select>
         </div>
         
-        <div class="form-group study-style-box" style="margin-top: 10px;">
+        <div class="form-group study-style-box">
             <label style="font-weight: bold; margin-bottom: 5px;">④ 学習スタイル</label>
-            <select id="select-study-style" onchange="updateStudyStyleHelp()">
+            <select id="select-study-style">
                 <option value="learning">学習モード（解説を読んで自分で次へ）</option>
                 <option value="training">トレーニングモード（正誤表示後に自動で次へ）</option>
             </select>
-            <div class="study-style-help" id="study-style-help">
-                正誤と解説を確認し、「次の問題へ」を押して進みます。
-            </div>
         </div>
 
         <div class="form-group" style="margin-top: 10px;">
@@ -401,19 +422,19 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             </select>
         </div>
 
-        <div class="form-group" style="margin-top:10px;padding:12px;background:#f5f5f5;border-radius:8px;border:1px solid #ddd;">
-            <label style="font-weight:bold;margin-bottom:8px;">⑦ 解答時の効果音</label>
-            <label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                <input type="checkbox" id="sound-enabled" checked onchange="saveSoundSettings()" style="width:20px;height:20px;">
-                <span>正解・不正解の効果音を鳴らす</span>
-            </label>
-            <label for="sound-volume" style="font-size:.9em;">音量：<span id="sound-volume-label">60%</span></label>
+        <div class="form-group sound-settings-box">
+            <div class="sound-settings-head">
+                <label style="font-weight:bold;">⑦ 解答時の効果音</label>
+                <input type="checkbox" id="sound-enabled" checked hidden>
+                <button type="button" id="sound-toggle-btn" class="sound-toggle-btn is-on" onclick="toggleSoundEnabled()" aria-pressed="true" aria-label="効果音をオンにする"></button>
+            </div>
+            <label for="sound-volume" style="font-size:.86em;">音量：<span id="sound-volume-label">60%</span></label>
             <input type="range" id="sound-volume" min="0" max="100" value="60"
                    oninput="updateSoundVolumeLabel()" onchange="saveSoundSettings()"
-                   style="width:100%;margin:6px 0 10px;">
-            <div style="display:flex;gap:8px;">
-                <button type="button" onclick="previewAnswerSound(true)" style="flex:1;padding:10px;border:none;border-radius:7px;background:#e8f5e9;color:#2e7d32;font-weight:bold;">▶ 正解音を試す</button>
-                <button type="button" onclick="previewAnswerSound(false)" style="flex:1;padding:10px;border:none;border-radius:7px;background:#ffebee;color:#c62828;font-weight:bold;">▶ 不正解音を試す</button>
+                   style="width:100%;margin:4px 0 8px;">
+            <div class="sound-preview-row">
+                <button type="button" onclick="previewAnswerSound(true)" style="background:#e8f5e9;color:#2e7d32;">▶ 正解音</button>
+                <button type="button" onclick="previewAnswerSound(false)" style="background:#ffebee;color:#c62828;">▶ 不正解音</button>
             </div>
         </div>
 
@@ -448,7 +469,16 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             <div class="progress-label" id="q-progress">0 / 0</div>
         </div>
         
-        <div class="q-meta" id="q-meta">No. - (マスターNo. -)</div>
+        <div class="q-status-row">
+            <div class="q-meta" id="q-meta">No.-(-)</div>
+            <div class="q-status-actions">
+                <label class="compact-check" title="チェック" aria-label="チェック">
+                    <input type="checkbox" id="q-checkbox" onchange="toggleCheck(event)">
+                </label>
+                <div class="history-label" id="q-history" aria-label="解答履歴"></div>
+                <button class="mini-edit-btn" onclick="openQuestionEditorFromQuiz()">編集</button>
+            </div>
+        </div>
 
         <div class="timer-panel" id="timer-panel" aria-live="polite">
             <div class="timer-top">
@@ -459,18 +489,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
                 <div class="timer-fill" id="timer-fill"></div>
             </div>
         </div>
-        <div class="quiz-tools">
-            <button class="mini-edit-btn" onclick="openQuestionEditorFromQuiz()">✏️ この問題を編集</button>
-        </div>
-        
         <div class="question-area">
-            <div class="status-container">
-                <label class="checkbox-container">
-                    <input type="checkbox" id="q-checkbox" onchange="toggleCheck(event)">
-                    <span class="checkbox-label">チェック</span>
-                </label>
-                <div class="history-label" id="q-history">履歴: -</div>
-            </div>
             <div class="question" id="q-text">問題を読み込んでいます...</div>
         </div>
         
@@ -936,7 +955,8 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
         // --- Data Access & UI Updates ---
         function getUserData(id) {
-            if (!userData[id]) userData[id] = { checked: false, streak: 0, played: false };
+            if (!userData[id]) userData[id] = { checked: false, streak: 0, played: false, everWrong: false };
+            if (typeof userData[id].everWrong !== 'boolean') userData[id].everWrong = false;
             return userData[id];
         }
 
@@ -1201,7 +1221,26 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             if (!enabled || !volume) return;
             enabled.checked = soundSettings.enabled !== false;
             volume.value = Math.round(Math.max(0, Math.min(1, Number(soundSettings.volume) || 0)) * 100);
+            updateSoundToggleUI();
             updateSoundVolumeLabel();
+        }
+
+        function updateSoundToggleUI() {
+            const enabled = document.getElementById('sound-enabled');
+            const button = document.getElementById('sound-toggle-btn');
+            if (!enabled || !button) return;
+            const isOn = enabled.checked;
+            button.classList.toggle('is-on', isOn);
+            button.setAttribute('aria-pressed', String(isOn));
+            button.setAttribute('aria-label', isOn ? '効果音をオフにする' : '効果音をオンにする');
+        }
+
+        function toggleSoundEnabled() {
+            const enabled = document.getElementById('sound-enabled');
+            if (!enabled) return;
+            enabled.checked = !enabled.checked;
+            saveSoundSettings();
+            updateSoundToggleUI();
         }
 
         function updateSoundVolumeLabel() {
@@ -1216,6 +1255,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             if (enabled) soundSettings.enabled = enabled.checked;
             if (volume) soundSettings.volume = Number(volume.value) / 100;
             localStorage.setItem(STORAGE_SOUND_KEY, JSON.stringify(soundSettings));
+            updateSoundToggleUI();
             updateSoundVolumeLabel();
         }
 
@@ -1406,27 +1446,22 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             document.getElementById('q-theme').innerText = q.theme;
             document.getElementById('q-progress').innerText = `${currentIndex + 1} / ${activeQuestions.length}`;
             
-            let typeBadge = '';
-            if (q.type === 'ox') typeBadge = `<span class="badge-type badge-ox">〇×</span>`;
-            else if (q.type === '4c') typeBadge = `<span class="badge-type badge-4c">4択</span>`;
-            else if (q.type === 'sort') typeBadge = `<span class="badge-type badge-sort">並替</span>`;
-            
-            let impBadge = `<span class="badge-imp">重要度 ${q.importance || '-'}</span>`;
-            const editedBadge = q.edited ? `<span class="edited-badge">編集済</span>` : '';
-            document.getElementById('q-meta').innerHTML = `${editedBadge}${typeBadge}${impBadge} No.${q.n} (マスターNo.${q.m})`;
+            const impBadge = `<span class="badge-imp">${q.importance || '-'}</span>`;
+            document.getElementById('q-meta').innerHTML = `<span class="q-number">No.${q.n}(${q.m})</span>${impBadge}`;
             
             document.getElementById('q-text').innerText = q.question;
             document.getElementById('q-checkbox').checked = u.checked;
             
-            let histText = "未解答";
-            if (u.played) {
-                if (u.streak >= 2) histText = "○○"; else if (u.streak === 1) histText = "〇"; else histText = "✕"; 
-            }
+            let histText = "";
+            if (u.everWrong) histText = "×";
+            else if (u.played && u.streak >= 2) histText = "○○";
+            else if (u.played && u.streak === 1) histText = "○";
             const histLabel = document.getElementById('q-history');
-            histLabel.innerText = `履歴: ${histText}`;
-            if (histText === "○○" || histText === "〇") { histLabel.style.color = "var(--primary-dark)"; histLabel.style.background = "#e8f5e9"; } 
-            else if (histText === "✕") { histLabel.style.color = "var(--red)"; histLabel.style.background = "#ffebee"; } 
-            else { histLabel.style.color = "#888"; histLabel.style.background = "#f0f0f0"; }
+            histLabel.innerText = histText;
+            histLabel.style.visibility = histText ? 'visible' : 'hidden';
+            if (histText === "○○" || histText === "○") { histLabel.style.color = "var(--primary-dark)"; histLabel.style.background = "#e8f5e9"; } 
+            else if (histText === "×") { histLabel.style.color = "var(--red)"; histLabel.style.background = "#ffebee"; } 
+            else { histLabel.style.color = "transparent"; histLabel.style.background = "transparent"; }
 
             const areaOx = document.getElementById('action-area-ox');
             const area4c = document.getElementById('action-area-4c');
@@ -1491,7 +1526,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
                 sessionCorrect++; u.streak += 1;
                 if (u.streak >= 2) u.checked = false; 
             } else {
-                u.streak = 0; u.checked = true; 
+                u.streak = 0; u.checked = true; u.everWrong = true;
             }
             saveData();
             
@@ -1501,6 +1536,12 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             });
             
             document.getElementById('q-checkbox').checked = u.checked;
+            const currentHist = document.getElementById('q-history');
+            const currentHistText = u.everWrong ? '×' : (u.streak >= 2 ? '○○' : (u.streak === 1 ? '○' : ''));
+            currentHist.innerText = currentHistText;
+            currentHist.style.visibility = currentHistText ? 'visible' : 'hidden';
+            currentHist.style.color = u.everWrong ? 'var(--red)' : 'var(--primary-dark)';
+            currentHist.style.background = u.everWrong ? '#ffebee' : '#e8f5e9';
             document.getElementById('action-area-ox').style.visibility = 'hidden';
             document.getElementById('action-area-4c').style.visibility = 'hidden';
             document.getElementById('action-area-sort').style.visibility = 'hidden';
