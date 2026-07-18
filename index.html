@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.15 (表示 v10.20)
+Version : 1.0.17 (表示 v10.22)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -11,7 +11,9 @@ Version : 1.0.15 (表示 v10.20)
 ■ 今回の更新
 ・設定画面のプルダウン文言を簡略化
 ・出題モードと出題順の並び順を整理
-・出題範囲の選択欄に控えめな枠線を追加
+・出題範囲の一覧表示部分だけを控えめな枠線で囲む
+・出題範囲の閉じたボタンを他のプルダウンと同じ下線表示へ戻す
+・全プルダウンの矢印を右端へ寄せる
 ・ゲーム風カウントダウン追加
 ・GO!演出追加
 ・効果音追加
@@ -92,7 +94,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10.20</title>
+    <title>財務諸表論ドリル v10.22</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -121,8 +123,10 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
         .compact-setting-row { display:grid; grid-template-columns:minmax(112px, 38%) minmax(0, 1fr); align-items:center; gap:10px; margin-bottom:8px; }
         .compact-setting-row > label { margin:0 !important; font-size:.92em; line-height:1.25; }
-        .compact-setting-row select { width:100%; min-width:0; padding:7px 32px 7px 2px; font-size:.92em; background:transparent; border:0; border-bottom:1px solid #d6d6d6; border-radius:0; box-shadow:none; appearance:auto; }
-        .compact-setting-row select:focus { outline:none; border-bottom-color:var(--primary); }
+        .compact-setting-row select { width:100%; min-width:0; padding:7px 28px 7px 2px; font-size:.92em; color:#222; -webkit-text-fill-color:#222; opacity:1; background-color:transparent; border:0; border-bottom:1px solid #d6d6d6; border-radius:0; box-shadow:none; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='18' viewBox='0 0 14 18'%3E%3Cpath d='M3 6l4-4 4 4M3 12l4 4 4-4' fill='none' stroke='%23111111' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 2px center; background-size:14px 18px; }
+        .compact-setting-row select:focus { outline:none; border-bottom-color:#d6d6d6; color:#222; -webkit-text-fill-color:#222; }
+        .compact-setting-row select:active { color:#222; -webkit-text-fill-color:#222; }
+        .compact-setting-row select option { color:#222; background:#fff; }
         #test-setting-screen { gap:10px; }
         #test-setting-screen > h2 { margin-bottom:2px !important; }
         #test-setting-screen .theme-list { max-height:285px; }
@@ -132,6 +136,8 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             .compact-setting-row select { font-size:.86em; padding-top:8px; padding-bottom:8px; }
         }
         select, button.start-btn { padding: 10px; font-size: 1em; border-radius: 0; border: 0; border-bottom: 1px solid #d6d6d6; box-shadow:none; background:transparent; }
+        select, button, .theme-card { -webkit-tap-highlight-color:transparent; }
+        select { color:#222; -webkit-text-fill-color:#222; opacity:1; }
         .target-count-box { background:transparent; padding:2px 0; border-radius:0; text-align:right; font-size:.84em; font-weight:500; color:#666; border:0; margin-top:0; }
         .target-count-box strong { font-size:1em; font-weight:700; color:inherit; }
         button.start-btn { background-color: var(--primary); color: white; border: none; font-size: 1.2em; font-weight: bold; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 0 var(--primary-dark); transition: transform 0.1s;}
@@ -141,16 +147,17 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .theme-setting-group { margin-bottom:8px; }
         .theme-selector-row { display:grid; grid-template-columns:minmax(112px,38%) minmax(0,1fr); align-items:center; gap:10px; }
         .theme-selector-row > label { margin:0; font-size:.92em; line-height:1.25; }
-        .theme-selector-button { width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; background:#fff; border:1px solid #d8d8d8; border-radius:6px; color:#222; font:inherit; font-size:.92em; text-align:left; cursor:pointer; }
-        .theme-selector-button:focus { outline:none; border-color:var(--primary); }
+        .theme-selector-button { width:100%; display:flex; -webkit-tap-highlight-color:transparent; align-items:center; justify-content:space-between; gap:8px; padding:7px 2px; background:transparent; border:0; border-bottom:1px solid #d6d6d6; border-radius:0; color:#222; font:inherit; font-size:.92em; text-align:left; cursor:pointer; }
+        .theme-selector-button:focus { outline:none; border-bottom-color:#d6d6d6; color:#222; }
         .theme-selector-button .theme-selector-text { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .theme-selector-chevron { flex:0 0 auto; font-size:.85em; line-height:1; transition:transform .18s ease; }
+        .theme-selector-chevron { flex:0 0 auto; font-size:.85em; line-height:1; margin-right:1px; transition:transform .18s ease; }
         .theme-selector-button[aria-expanded="true"] .theme-selector-chevron { transform:rotate(180deg); }
-        .theme-list { display:none; flex-direction:column; gap:0; max-height:290px; overflow-y:auto; margin:6px 0 0; padding:0; border:0; border-top:1px solid #e2e2e2; background:white; }
+        .theme-list { display:none; flex-direction:column; gap:0; max-height:290px; overflow-y:auto; margin:6px 0 0; padding:0 8px; border:1px solid #dddddd; border-radius:6px; background:white; }
         .theme-list.is-open { display:flex; }
-        .theme-card { padding:10px 2px; background:white; border:0; border-bottom:1px solid #ececec; border-radius:0; cursor:pointer; box-shadow:none; transition:background .12s ease; position:relative; }
+        .theme-card { padding:10px 2px; color:#333; -webkit-tap-highlight-color:transparent; background:white; border:0; border-bottom:1px solid #ececec; border-radius:0; cursor:pointer; box-shadow:none; transition:background .12s ease; position:relative; }
         .theme-card:last-child { border-bottom:0; }
-        .theme-card:active { background:#f5f5f5; }
+        .theme-card:focus { outline:none; }
+        .theme-card:active { background:#f5f5f5; color:#333; }
         .theme-card.active { background:#f6fbf4; }
         .theme-card-title { font-weight:600; font-size:.9em; margin-bottom:4px; color:#333; line-height:1.3; }
         .theme-stats-text { font-size:.78em; color:#666; margin-bottom:0; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
@@ -785,7 +792,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.20</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.22</span>
     </header>
 
     <div class="container" id="init-screen">
