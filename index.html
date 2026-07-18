@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>財務諸表論ドリル（完全版）</title>
+    <style>
+        :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; color: var(--text); }
+        header { background-color: var(--primary); color: white; width: 100%; padding: 15px 0; text-align: center; font-size: 1.2em; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; z-index: 100;}
+        #header-back-btn { position: absolute; left: 15px; top: 12px; background: none; border: 1px solid white; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; display: none; font-size: 0.9em; transition: 0.2s;}
+        #header-back-btn:active { background: white; color: var(--primary); }
+        
+        .container { width: 90%; max-width: 500px; margin-top: 20px; margin-bottom: 20px; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 15px; }
+        
+        /* Init Screen */
+        #init-screen { display: none; text-align: center; }
+        .file-upload-box { border: 2px dashed #ccc; padding: 15px; border-radius: 10px; background: #fafafa; margin-top: 5px; text-align: left;}
+        
+        /* Top Menu Screen */
+        #top-menu-screen { display: none; text-align: center; }
+        .menu-btn-group { display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
+        .menu-btn { padding: 20px; font-size: 1.3em; font-weight: bold; color: white; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        .menu-btn:active { transform: translateY(4px); box-shadow: none; }
+        .menu-btn-test { background-color: var(--primary); box-shadow: 0 4px 0 var(--primary-dark); }
+        .menu-btn-wb { background-color: var(--blue); box-shadow: 0 4px 0 #1976D2; }
+        
+        .stats-box { background: #e8f5e9; padding: 15px; border-radius: 8px; font-size: 0.95em; line-height: 1.6; border: 1px solid #c8e6c9; text-align: left;}
+        
+        /* Form Commons */
+        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+        select, button.start-btn { padding: 12px; font-size: 1em; border-radius: 5px; border: 1px solid #ccc; }
+        .target-count-box { background: #fff3e0; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; color: #e65100; border: 1px solid #ffe0b2; margin-top: 5px;}
+        button.start-btn { background-color: var(--primary); color: white; border: none; font-size: 1.2em; font-weight: bold; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 0 var(--primary-dark); transition: transform 0.1s;}
+        button.start-btn:active { transform: translateY(4px); box-shadow: none; }
+        
+        /* Theme List (Cards) */
+        .theme-list { display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
+        .theme-card { padding: 12px; background: white; border: 2px solid transparent; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s; position: relative; }
+        .theme-card:hover { border-color: #bbb; }
+        .theme-card.active { border-color: var(--primary); background: #f1f8e9; box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3); }
+        .theme-card-title { font-weight: bold; font-size: 0.9em; margin-bottom: 5px; color: #333; line-height: 1.3;}
+        .theme-stats-text { font-size: 0.75em; color: #666; margin-bottom: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .theme-bar-container { display: flex; height: 10px; width: 100%; background: #e0e0e0; border-radius: 5px; overflow: hidden; }
+        .t-bar-master { background: var(--primary); transition: width 0.3s; }
+        .t-bar-one { background: var(--blue); transition: width 0.3s; }
+        
+        /* List UI */
+        .wb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .history-list { text-align: left; max-height: 60vh; overflow-y: auto; background: #fafafa; border: 1px solid #ddd; padding: 5px; border-radius: 5px; list-style: none; margin-top: 5px; }
+        .history-list li { padding: 12px 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s; }
+        .history-list li:hover, .history-list li:active { background-color: #e3f2fd; }
+        .history-list li:last-child { border-bottom: none; }
+        .list-left { display: flex; align-items: flex-start; gap: 10px; flex: 1; overflow: hidden; }
+        .res-icon { font-weight: bold; font-size: 1.3em; margin-top: -3px; flex-shrink: 0; width: 25px; text-align: center;}
+        .list-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+        .list-chk-container { display: flex; align-items: center; gap: 3px; background: #fff; padding: 4px 8px; border-radius: 15px; border: 1px solid #ccc; font-size: 0.75em; font-weight: bold; color: #555; }
+        
+        /* Badges */
+        .badge-type { color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; font-weight: bold; }
+        .badge-ox { background-color: var(--primary); }
+        .badge-4c { background-color: var(--blue); }
+        .badge-sort { background-color: #9C27B0; }
+        .badge-imp { background-color: #FF9800; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; font-weight: bold; }
+
+        /* Quiz Screen */
+        .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px; gap: 10px;}
+        .theme-label { font-size: 0.85em; color: #666; flex: 1; word-break: break-all; }
+        .progress-label { font-size: 0.9em; font-weight: bold; color: var(--primary); white-space: nowrap; margin-left: 10px; }
+        .q-meta { font-size: 0.85em; font-weight: bold; color: #555; background: #eee; display: inline-block; padding: 3px 8px; border-radius: 12px; margin-bottom: 10px; }
+        .question-area { position: relative; margin-top: 5px; }
+        .status-container { position: absolute; top: -45px; right: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+        .checkbox-container { display: flex; align-items: center; gap: 5px; background: #fff9c4; padding: 5px 10px; border-radius: 20px; border: 1px solid #fbc02d; cursor: pointer; user-select: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .checkbox-container input { cursor: pointer; transform: scale(1.2); }
+        .checkbox-label { font-size: 0.8em; font-weight: bold; color: #f57f17; }
+        .history-label { font-size: 0.85em; font-weight: bold; color: #888; background: #f0f0f0; padding: 3px 8px; border-radius: 10px; }
+        .question { font-size: 1.15em; line-height: 1.6; min-height: 100px; padding-top: 15px; }
+        
+
+        /* Timer */
+        .timer-panel { display:none; margin: 4px 0 12px; padding: 10px 12px; background:#f7f7f7; border:1px solid #ddd; border-radius:8px; }
+        .timer-top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:7px; }
+        .timer-label { font-size:0.82em; color:#666; font-weight:bold; }
+        .timer-clock { font-size:1.25em; font-weight:bold; color:var(--primary-dark); font-variant-numeric:tabular-nums; }
+        .timer-track { width:100%; height:12px; background:#e0e0e0; border-radius:999px; overflow:hidden; }
+        .timer-fill { width:0%; height:100%; background:var(--primary); transition:width .1s linear, background-color .2s; }
+        .timer-panel.warning .timer-clock { color:#e65100; }
+        .timer-panel.warning .timer-fill { background:#FF9800; }
+        .timer-panel.danger .timer-clock { color:var(--red); }
+        .timer-panel.danger .timer-fill { background:var(--red); }
+
+        /* Action Area */
+        .action-wrapper { position: relative; margin-top: 10px; width: 100%; }
+        .action-area-ox { display: flex; gap: 15px; height: 80px; width: 100%; }
+        .action-area-4c { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        
+        /* Sort Problem UI */
+        .sort-chunk { background: var(--primary); color: white; padding: 8px 12px; border-radius: 15px; font-size: 0.9em; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); user-select: none; transition: transform 0.1s; display: inline-block;}
+        .sort-chunk:active { transform: scale(0.95); }
+        .sort-chunk-avail { background: white; color: #444; border: 1px solid #ccc; padding: 8px 12px; border-radius: 15px; font-size: 0.9em; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none; transition: transform 0.1s; display: inline-block;}
+        .sort-chunk-avail:active { transform: scale(0.95); }
+
+        .btn-ox { flex: 1; height: 100%; font-size: 2em; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s; }
+        .btn-ox:active { transform: translateY(4px); box-shadow: none; }
+        .btn-o { background-color: var(--blue); box-shadow: 0 4px 0 #1976D2; }
+        .btn-x { background-color: var(--red); box-shadow: 0 4px 0 #D32F2F; }
+        
+        .btn-4c { width: 100%; padding: 15px; font-size: 1.05em; border: 2px solid var(--blue); border-radius: 8px; background: white; color: var(--text); font-weight: bold; cursor: pointer; text-align: left; line-height: 1.4; box-shadow: 0 4px 0 var(--blue); transition: transform 0.1s, box-shadow 0.1s; }
+        .btn-4c:active { transform: translateY(4px); box-shadow: none; }
+
+        .btn-next { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--primary); color: white; font-size: 1.4em; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: none; box-shadow: 0 4px 0 var(--primary-dark); z-index: 10; }
+        .btn-next:active { transform: translateY(4px); box-shadow: none; }
+        
+        #result-area { display: none; margin-top: 20px; padding: 15px; border-radius: 8px; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .correct-bg { background-color: #e8f5e9; border: 2px solid var(--primary); }
+        .incorrect-bg { background-color: #ffebee; border: 2px solid var(--red); }
+        .result-title { font-weight: bold; font-size: 1.3em; margin-bottom: 10px; }
+        .explanation { font-size: 0.95em; color: #444; margin-top: 15px; line-height: 1.6; padding: 12px; background: rgba(255,255,255,0.6); border-radius: 5px; border-left: 4px solid var(--primary); }
+        
+        /* Detail Modal */
+        #detail-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; padding: 15px; animation: fadeIn 0.2s; }
+        .modal-content { background: white; width: 100%; max-width: 500px; padding: 25px 20px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .close-btn { position: absolute; top: 12px; right: 15px; font-size: 1.8em; cursor: pointer; color: #888; line-height: 1; width: 30px; height: 30px; text-align: center; border-radius: 50%; background: #f0f0f0; }
+        .modal-q { font-size: 1.1em; font-weight: bold; margin-bottom: 20px; line-height: 1.5; padding-top: 10px;}
+        .modal-a { margin-bottom: 15px; background: #f5f5f5; padding: 12px; border-radius: 8px; font-size: 1em; display: flex; flex-direction: column; gap: 5px; }
+        .modal-e { background: #e8f5e9; padding: 15px; border-left: 5px solid var(--primary); font-size: 0.95em; line-height: 1.6; border-radius: 0 8px 8px 0; }
+
+
+        /* v9: Mobile editor & CSV source manager */
+        .utility-btn { width: 100%; padding: 13px; border: none; border-radius: 8px; color: white; font-size: 1em; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.22); }
+        .utility-btn:active { transform: translateY(4px); box-shadow: none; }
+        .utility-edit { background: #FF9800; box-shadow: 0 4px 0 #F57C00; }
+        .utility-download { background: #607D8B; box-shadow: 0 4px 0 #455A64; }
+        .quiz-tools { display:flex; justify-content:flex-end; margin-top:-5px; }
+        .mini-edit-btn { border:1px solid #FF9800; background:#fff8e1; color:#e65100; border-radius:18px; padding:7px 12px; font-size:.82em; font-weight:bold; cursor:pointer; }
+        .edited-badge { display:inline-block; background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:4px; padding:2px 6px; margin-right:5px; font-size:.75em; font-weight:bold; }
+        .edit-form { display:flex; flex-direction:column; gap:12px; }
+        .edit-row { display:flex; flex-direction:column; gap:5px; }
+        .edit-row label { font-size:.85em; font-weight:bold; color:#555; }
+        .edit-row input, .edit-row textarea, .edit-row select { width:100%; padding:11px; border:1px solid #bbb; border-radius:7px; font:inherit; background:white; }
+        .edit-row textarea { resize:vertical; min-height:90px; line-height:1.5; }
+        .edit-actions { display:flex; gap:10px; position:sticky; bottom:-25px; background:white; padding:12px 0 2px; }
+        .edit-actions button { flex:1; padding:13px 8px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+        .btn-cancel-edit { background:#eee; color:#555; }
+        .btn-save-edit { background:var(--primary); color:white; }
+        .source-list { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+        .source-card { border:1px solid #ddd; border-radius:9px; padding:12px; background:#fafafa; }
+        .source-title { font-weight:bold; word-break:break-all; margin-bottom:5px; }
+        .source-meta { color:#666; font-size:.82em; line-height:1.5; margin-bottom:9px; }
+        .source-actions { display:flex; gap:8px; }
+        .source-actions button { flex:1; padding:10px 6px; border:none; border-radius:7px; font-weight:bold; cursor:pointer; }
+        .source-download { background:#607D8B; color:white; }
+        .source-delete { background:#ffebee; color:#c62828; border:1px solid #ffcdd2 !important; }
+        .notice-box { background:#fff8e1; border:1px solid #ffe082; color:#795548; padding:10px; border-radius:7px; font-size:.82em; line-height:1.5; }
+        .change-summary { font-size:.8em; color:#e65100; font-weight:bold; margin-top:4px; }
+
+        @media (max-width: 480px) {
+            header { padding:14px 55px; min-height:50px; }
+            #header-back-btn { left:8px; }
+            .container { width:96%; padding:15px; margin-top:12px; }
+            .status-container { position:static; flex-direction:row; align-items:center; justify-content:space-between; margin-bottom:8px; }
+            .question { padding-top:0; min-height:80px; font-size:1.05em; }
+            .quiz-header { align-items:flex-start; }
+            .history-list li { padding:10px 6px; }
+            .badge-imp { font-size:.7em; }
+            .modal-content { padding:22px 15px; }
+            .source-actions { flex-direction:column; }
+        }
+
+    </style>
+    <!-- Shift-JISでのCSV再出力用。通信できない場合はUTF-8(BOM付き)へ自動フォールバックします。 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.2.0/encoding.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <button id="header-back-btn" onclick="handleBack()">戻る</button>
+        財務諸表論 ドリル
+    </header>
+
+    <div class="container" id="init-screen">
+        <h2 style="margin-top: 0;">アプリのデータ設定</h2>
+        <p style="font-size: 0.9em; color: #666; text-align: left; margin-bottom: 10px;">
+            お手元のCSVファイルを選択してください。<br>問題形式に合わせてボタンを押してください。
+        </p>
+        <div style="margin-bottom: 10px; text-align: left;">
+            <label style="font-size: 0.85em; font-weight: bold;">文字コード（文字化けする場合に変更）</label>
+            <select id="csv-encoding" style="width: 100%; padding: 8px;">
+                <option value="Shift_JIS">Shift-JIS (Excel標準)</option>
+                <option value="UTF-8">UTF-8</option>
+            </select>
+        </div>
+        
+        <div class="file-upload-box" style="border-color: var(--primary); background: #e8f5e9;">
+            <h4 style="margin-top:0; margin-bottom:10px; color: var(--primary-dark);">📝 〇×問題を追加</h4>
+            <input type="file" id="csv-file-ox" accept=".csv" style="width: 100%; margin-bottom: 10px;">
+            <button class="start-btn" onclick="processCSV('ox')" style="width: 100%; font-size:1em; padding:10px; margin-top:0;">〇×データを読み込む</button>
+        </div>
+        
+        <div class="file-upload-box" style="border-color: var(--blue); background: #e3f2fd;">
+            <h4 style="margin-top:0; margin-bottom:10px; color: #1565C0;">📝 4択問題を追加</h4>
+            <input type="file" id="csv-file-4c" accept=".csv" style="width: 100%; margin-bottom: 10px;">
+            <button class="start-btn" onclick="processCSV('4c')" style="width: 100%; font-size:1em; padding:10px; margin-top:0; background-color: var(--blue); box-shadow: 0 4px 0 #1976D2;">4択データを読み込む</button>
+        </div>
+
+        <div class="file-upload-box" style="border-color: #9C27B0; background: #F3E5F5;">
+            <h4 style="margin-top:0; margin-bottom:10px; color: #6A1B9A;">🧩 並べ替え問題を追加</h4>
+            <input type="file" id="csv-file-sort" accept=".csv" style="width: 100%; margin-bottom: 10px;">
+            <button class="start-btn" onclick="processCSV('sort')" style="width: 100%; font-size:1em; padding:10px; margin-top:0; background-color: #9C27B0; box-shadow: 0 4px 0 #6A1B9A;">並べ替えデータを読み込む</button>
+        </div>
+        
+        <button class="start-btn" onclick="finishInit()" style="width: 100%; margin-top:20px; padding:15px; font-size:1.2em; background-color: #FF9800; box-shadow: 0 4px 0 #F57C00;">メニューに戻る</button>
+    </div>
+
+    <div class="container" id="top-menu-screen">
+        <h2 style="margin-top: 0; color: #444;">メインメニュー</h2>
+        <div class="stats-box" id="global-stats-top">読込中...</div>
+        
+        <div class="menu-btn-group">
+            <button class="menu-btn menu-btn-test" onclick="showTestSettings()">📝 財務諸表論 テスト</button>
+            <button class="menu-btn menu-btn-wb" onclick="showWorkbook()">📖 財務諸表論 問題集</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:5px;">
+            <button class="utility-btn utility-download" onclick="openSourceManager()">📥 修正版CSVを書き出す</button>
+        </div>
+        
+        <div style="margin-top: 25px; display: flex; flex-direction: column; gap: 10px;">
+            <button onclick="switchScreen('init')" style="background:none; border:none; color:#888; text-decoration:underline; cursor:pointer; font-size:0.85em;">問題データをさらに追加する</button>
+            <button onclick="resetData()" style="background:none; border:none; color:var(--red); text-decoration:underline; cursor:pointer; font-size:0.85em;">全データをリセットして最初から</button>
+        </div>
+    </div>
+
+    <div class="container" id="test-setting-screen">
+        <h2 style="margin-top: 0;">テスト設定</h2>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label style="font-weight: bold; margin-bottom: 5px;">① 出題する問題形式</label>
+            <select id="select-qtype" onchange="renderThemeCards(); updateTargetCount();">
+                <option value="all">すべて（〇× / 4択 / 並べ替え）</option>
+                <option value="ox">〇×問題のみ</option>
+                <option value="4c">4択問題のみ</option>
+                <option value="sort">並べ替え問題のみ</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label style="font-weight: bold; margin-bottom: 5px;">② 出題範囲（テーマ）を選択</label>
+            <div id="theme-list" class="theme-list">
+                </div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 10px;">
+            <label style="font-weight: bold; margin-bottom: 5px;">③ 出題モードを選択</label>
+            <select id="select-mode" onchange="updateTargetCount()">
+                <option value="unmastered">未修得の問題を学習（おすすめ）</option>
+                <option value="checked">チェック問題（復習）のみ</option>
+                <option value="all">すべての問題を出題</option>
+            </select>
+        </div>
+        
+        <div class="form-group" style="margin-top: 10px;">
+            <label style="font-weight: bold; margin-bottom: 5px;">④ 1問あたりの制限時間</label>
+            <select id="select-time-limit">
+                <option value="0">設定なし</option>
+                <option value="1">1秒</option>
+                <option value="5">5秒</option>
+                <option value="10">10秒</option>
+                <option value="15">15秒</option>
+                <option value="20">20秒</option>
+                <option value="25">25秒</option>
+                <option value="30">30秒</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label style="font-weight: bold; margin-bottom: 5px;">⑤ 出題順</label>
+            <select id="select-question-order">
+                <option value="random">ランダム</option>
+                <option value="asc">No.の昇順</option>
+                <option value="desc">No.の降順</option>
+            </select>
+        </div>
+
+        <div class="target-count-box" id="target-count-box">対象問題数: 計算中...</div>
+        <button class="start-btn" onclick="startQuiz()" style="width: 100%;">テスト開始</button>
+    </div>
+
+    <div class="container" id="workbook-screen">
+        <div class="wb-header">
+            <h2 style="margin: 0;">問題集</h2>
+            <div style="font-size: 0.8em; color: #666;">タップで詳細表示</div>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 5px; display:flex; gap:10px;">
+            <select id="wb-select-theme" onchange="renderWorkbookList()" style="flex:1;">
+                <option value="all">すべてのテーマ</option>
+            </select>
+            <select id="wb-select-qtype" onchange="renderWorkbookList()" style="flex:1;">
+                <option value="all">すべての形式</option>
+                <option value="ox">〇×問題</option>
+                <option value="4c">4択問題</option>
+                <option value="sort">並べ替え問題</option>
+            </select>
+        </div>
+        
+        <ul class="history-list" id="wb-list" style="max-height: 65vh;"></ul>
+    </div>
+
+    <div class="container" id="quiz-screen">
+        <div class="quiz-header">
+            <div class="theme-label" id="q-theme">テーマ読込中...</div>
+            <div class="progress-label" id="q-progress">0 / 0</div>
+        </div>
+        
+        <div class="q-meta" id="q-meta">No. - (マスターNo. -)</div>
+
+        <div class="timer-panel" id="timer-panel" aria-live="polite">
+            <div class="timer-top">
+                <span class="timer-label">制限時間</span>
+                <span class="timer-clock" id="timer-clock">--</span>
+            </div>
+            <div class="timer-track" aria-hidden="true">
+                <div class="timer-fill" id="timer-fill"></div>
+            </div>
+        </div>
+        <div class="quiz-tools">
+            <button class="mini-edit-btn" onclick="openQuestionEditorFromQuiz()">✏️ この問題を編集</button>
+        </div>
+        
+        <div class="question-area">
+            <div class="status-container">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="q-checkbox" onchange="toggleCheck(event)">
+                    <span class="checkbox-label">チェック</span>
+                </label>
+                <div class="history-label" id="q-history">履歴: -</div>
+            </div>
+            <div class="question" id="q-text">問題を読み込んでいます...</div>
+        </div>
+        
+        <div class="action-wrapper" id="action-wrapper">
+            <div class="action-area-ox" id="action-area-ox">
+                <button class="btn-ox btn-o" onclick="checkAnswer('○')">○</button>
+                <button class="btn-ox btn-x" onclick="checkAnswer('×')">×</button>
+            </div>
+            
+            <div class="action-area-4c" id="action-area-4c"></div>
+            
+            <div class="action-area-sort" id="action-area-sort" style="display:none; flex-direction:column; gap:10px; width:100%;">
+                <div style="font-size:0.85em; color:#666; margin-bottom:-5px; font-weight:bold;">タップして順番に並べてください：</div>
+                <div id="sort-selected-area" style="min-height:60px; padding:10px; border:2px dashed var(--primary); border-radius:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; background:#f1f8e9;"></div>
+                <div id="sort-available-area" style="min-height:60px; padding:10px; border:1px solid #ddd; border-radius:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; background:white;"></div>
+                <button id="btn-sort-check" class="start-btn" style="width:100%; display:none; margin-top:5px; background-color:var(--primary); box-shadow:0 4px 0 var(--primary-dark); color:white;" onclick="checkSortAnswer()">解答する</button>
+            </div>
+            
+            <button class="btn-next" id="btn-next" onclick="nextQuestion()">次の問題へ</button>
+        </div>
+
+        <div id="result-area">
+            <div class="result-title" id="r-title"></div>
+            <div class="explanation" id="r-exp"></div>
+        </div>
+    </div>
+
+    <div class="container" id="summary-screen">
+        <h2>お疲れ様でした！</h2>
+        <div class="stats-box" id="session-stats" style="margin-bottom: 15px;"></div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px;">
+            <h3 style="margin: 0; font-size: 1.1em; text-align: left;">今回の学習履歴</h3>
+            <span style="font-size: 0.75em; color: #666; text-align: right;">左側タップで詳細表示<br>右側で直接チェック</span>
+        </div>
+        
+        <ul class="history-list" id="session-log"></ul>
+        <button class="start-btn" style="width: 100%; margin-top: 20px;" onclick="showTopMenu()">トップに戻る</button>
+    </div>
+
+    <div id="detail-modal" onclick="if(event.target===this) closeDetail()">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeDetail()">&times;</span>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; padding-right: 30px;">
+                <div class="q-meta" id="modal-meta" style="margin-bottom: 0;"></div>
+                
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label class="checkbox-container" style="position: static; padding: 4px 10px;">
+                        <input type="checkbox" id="modal-checkbox" onchange="toggleModalCheck(event)">
+                        <span class="checkbox-label">チェック</span>
+                    </label>
+                    <div class="history-label" id="modal-history" style="margin: 0;">履歴: -</div>
+                </div>
+            </div>
+            
+            <div class="modal-q" id="modal-q"></div>
+            <div class="modal-a" id="modal-a"></div>
+            <div class="modal-e" id="modal-e"></div>
+        </div>
+    </div>
+
+
+    <!-- 問題編集モーダル -->
+    <div id="edit-modal" onclick="if(event.target===this) closeQuestionEditor()"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:1200; justify-content:center; align-items:center; padding:12px;">
+        <div class="modal-content" style="max-width:560px;">
+            <span class="close-btn" onclick="closeQuestionEditor()">&times;</span>
+            <h2 style="margin:0 35px 15px 0; font-size:1.25em;">問題を加筆・修正</h2>
+            <div id="edit-source-note" class="notice-box" style="margin-bottom:12px;"></div>
+            <div class="edit-form">
+                <div class="edit-row">
+                    <label for="edit-theme">テーマ</label>
+                    <input id="edit-theme" type="text">
+                </div>
+                <div class="edit-row">
+                    <label for="edit-importance">重要度</label>
+                    <input id="edit-importance" type="text">
+                </div>
+                <div class="edit-row">
+                    <label for="edit-question">問題文</label>
+                    <textarea id="edit-question" rows="7"></textarea>
+                </div>
+                <div class="edit-row">
+                    <label for="edit-answer">解答</label>
+                    <textarea id="edit-answer" rows="3"></textarea>
+                </div>
+                <div class="edit-row">
+                    <label for="edit-explanation">解説・備考</label>
+                    <textarea id="edit-explanation" rows="7"></textarea>
+                </div>
+                <div class="edit-row" id="edit-chunks-row" style="display:none;">
+                    <label for="edit-chunks">並べ替え用の区切り（1行につき1つ）</label>
+                    <textarea id="edit-chunks" rows="7"></textarea>
+                </div>
+                <div class="edit-actions">
+                    <button class="btn-cancel-edit" onclick="closeQuestionEditor()">キャンセル</button>
+                    <button class="btn-save-edit" onclick="saveQuestionEdit()">保存する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSV書き出しモーダル -->
+    <div id="source-modal" onclick="if(event.target===this) closeSourceManager()"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:1150; justify-content:center; align-items:center; padding:12px;">
+        <div class="modal-content" style="max-width:560px;">
+            <span class="close-btn" onclick="closeSourceManager()">&times;</span>
+            <h2 style="margin:0 35px 8px 0; font-size:1.25em;">修正版CSVを書き出す</h2>
+            <div class="notice-box">
+                読み込んだファイルごとに、元の列名・列順・行順を保ったCSVを書き出します。
+                Shift-JIS変換機能が利用できない環境では、UTF-8（BOM付き）で出力します。
+            </div>
+            <div id="source-list" class="source-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_DATA_KEY = 'zaim_quiz_alldata_v8';
+        const STORAGE_USER_KEY = 'zaim_quiz_userdata_v8';
+        const STORAGE_SOURCE_KEY = 'zaim_quiz_csvsources_v9';
+        
+        let allData = JSON.parse(localStorage.getItem(STORAGE_DATA_KEY)) || [];
+        let userData = JSON.parse(localStorage.getItem(STORAGE_USER_KEY)) || {};
+        let csvSources = JSON.parse(localStorage.getItem(STORAGE_SOURCE_KEY)) || [];
+        
+        let activeQuestions = [];
+        let currentIndex = 0;
+        let sessionCorrect = 0;
+        let sessionHistory = [];
+        let questionTimeLimit = 0;
+        let questionTimerId = null;
+        let questionTimerStartedAt = 0;
+        let questionAnswered = false;
+
+        
+        // 並べ替え問題用ステート
+        let currentSortChunks = [];
+        let selectedSortChunks = [];
+        
+        let currentModalQId = null;
+        let editingQuestionId = null;
+        let editingOriginal = null; 
+        let isModalFromWorkbook = false; 
+        let selectedTheme = 'all'; 
+        let currentScreen = 'init';
+
+        function init() {
+            if (allData.length === 0) {
+                switchScreen('init');
+            } else {
+                setupThemes();
+                showTopMenu();
+            }
+        }
+        
+        // --- Navigation ---
+        function switchScreen(screenName) {
+            document.getElementById('init-screen').style.display = 'none';
+            document.getElementById('top-menu-screen').style.display = 'none';
+            document.getElementById('test-setting-screen').style.display = 'none';
+            document.getElementById('workbook-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('summary-screen').style.display = 'none';
+            
+            const backBtn = document.getElementById('header-back-btn');
+            
+            if (screenName === 'top') {
+                document.getElementById('top-menu-screen').style.display = 'block';
+                backBtn.style.display = 'none';
+                updateGlobalStats();
+            } else if (screenName === 'test-setting') {
+                document.getElementById('test-setting-screen').style.display = 'flex';
+                backBtn.style.display = 'block';
+                renderThemeCards();
+                updateTargetCount();
+            } else if (screenName === 'workbook') {
+                document.getElementById('workbook-screen').style.display = 'flex';
+                backBtn.style.display = 'block';
+                renderWorkbookList();
+            } else if (screenName === 'quiz') {
+                document.getElementById('quiz-screen').style.display = 'flex';
+                backBtn.style.display = 'block';
+            } else if (screenName === 'summary') {
+                document.getElementById('summary-screen').style.display = 'block';
+                backBtn.style.display = 'none';
+            } else if (screenName === 'init') {
+                document.getElementById('init-screen').style.display = 'flex';
+                backBtn.style.display = 'none';
+            }
+            currentScreen = screenName;
+        }
+
+        function handleBack() {
+            if (currentScreen === 'test-setting' || currentScreen === 'workbook') showTopMenu();
+            else if (currentScreen === 'quiz') {
+                if (confirm('テストを中断して設定画面に戻りますか？')) { stopQuestionTimer(); switchScreen('test-setting'); }
+            }
+            else if (currentScreen === 'init' && allData.length > 0) showTopMenu();
+        }
+
+        function showTopMenu() { switchScreen('top'); }
+        function showTestSettings() { switchScreen('test-setting'); }
+        function showWorkbook() { switchScreen('workbook'); }
+
+        // --- CSV Processing ---
+        function processCSV(type) {
+            const fileInput = document.getElementById(type === 'ox' ? 'csv-file-ox' : (type === '4c' ? 'csv-file-4c' : 'csv-file-sort'));
+            const encodingSelect = document.getElementById('csv-encoding');
+            if (!fileInput.files.length) { alert("CSVファイルを選択してください。"); return; }
+
+            const file = fileInput.files[0];
+            const selectedEncoding = encodingSelect.value;
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = parseCSVText(text);
+
+                if (rows.length < 2) { alert("データが空か、正しく読み込めませんでした。"); return; }
+
+                const headers = rows[0].map(h => h ? h.trim() : "");
+                const col = {
+                    m: headers.findIndex(h => h.includes('マスターNo')),
+                    n: headers.findIndex(h => h === 'No.' || h === 'No'),
+                    theme: headers.findIndex(h => h.includes('テーマ')),
+                    imp: headers.findIndex(h => h.includes('重要度')),
+                    qText: headers.findIndex(h => h.includes('問題文') || h === '問題'),
+                    ans: headers.findIndex(h => h.includes('解答') || h.includes('回答')),
+                    exp: headers.findIndex(h => h.includes('備考') || h.includes('解説'))
+                };
+
+                const splitCols = [];
+                headers.forEach((h, idx) => {
+                    if (h && h.includes('区切り')) splitCols.push(idx);
+                });
+
+                if (col.ans === -1) {
+                    if (rows[0].length >= 10) { col.m=0; col.n=1; col.theme=2; col.imp=4; col.qText=8; col.ans=9; col.exp=10; } 
+                    else { col.m=0; col.n=1; col.theme=2; col.imp=3; col.qText=4; col.ans=5; col.exp=6; }
+                }
+
+                const sourceId = 'src_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+                const source = {
+                    id: sourceId,
+                    fileName: file.name,
+                    type,
+                    encoding: selectedEncoding,
+                    lineEnding: text.includes('\r\n') ? '\r\n' : '\n',
+                    headers: [...rows[0]],
+                    rows: rows.map(row => [...row]),
+                    importedAt: new Date().toISOString(),
+                    editedQuestionIds: []
+                };
+
+                let extracted = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const r = rows[i];
+                    if (r.length < 3) continue;
+
+                    const mNo = parseInt(r[col.m]) || 0;
+                    const no = parseInt(r[col.n]) || 0;
+                    const theme = (r[col.theme] || "テーマ未定").trim();
+                    const imp = (col.imp !== -1 && r[col.imp]) ? r[col.imp].trim() : "-";
+                    let qText = (r[col.qText] || "").trim();
+                    let ans = (col.ans !== -1 && r[col.ans]) ? r[col.ans].trim() : "";
+                    let exp = (col.exp !== -1 && r[col.exp]) ? r[col.exp].trim() : "";
+                    const base = {
+                        id: `${type}_${sourceId}_${i}`,
+                        m: mNo, n: no, theme, importance: imp,
+                        sourceId, sourceRowIndex: i,
+                        sourceColumns: { m: col.m, n: col.n, theme: col.theme, importance: col.imp, question: col.qText, answer: col.ans, explanation: col.exp, chunks: [...splitCols] },
+                        edited: false, editedAt: null
+                    };
+
+                    if (type === 'ox') {
+                        if (ans.includes('○') || ans.includes('×') || ans.includes('〇')) {
+                            ans = (ans.includes('○') || ans.includes('〇')) ? '○' : '×';
+                            qText = qText.replace(/\[\d+\]/g, '').replace('次に掲げる各文章について、誤っている箇所があるものには×印を、誤っている箇所がないものには○印を記入しなさい。', '').trim();
+                            exp = exp.replace(/\[\d+\]/g, '').trim();
+                            extracted.push({ ...base, question:qText, answer:ans, explanation:exp, type:'ox' });
+                        }
+                    } else if (type === '4c') {
+                        if (ans.length > 0) {
+                            qText = qText.replace(/\[\d+\]/g, '').trim();
+                            ans = ans.replace(/\[\d+\]/g, '').trim();
+                            exp = exp.replace(/\[\d+\]/g, '').trim();
+                            if (ans !== '○' && ans !== '×' && ans !== '〇') {
+                                extracted.push({ ...base, question:qText, answer:ans, explanation:exp, type:'4c' });
+                            }
+                        }
+                    } else if (type === 'sort') {
+                        if (ans.length > 0) {
+                            qText = qText.replace(/\[\d+\]/g, '').trim();
+                            ans = ans.replace(/\[\d+\]/g, '').trim();
+                            exp = exp.replace(/\[\d+\]/g, '').trim();
+                            const chunks = splitCols.map(idx => (r[idx] || '').trim()).filter(Boolean);
+                            if (chunks.length >= 2) {
+                                extracted.push({ ...base, question:qText, answer:ans, explanation:exp, type:'sort', chunks });
+                            }
+                        }
+                    }
+                }
+
+                if (extracted.length > 0) {
+                    allData = allData.concat(extracted);
+                    csvSources.push(source);
+                    try {
+                        localStorage.setItem(STORAGE_DATA_KEY, JSON.stringify(allData));
+                        localStorage.setItem(STORAGE_SOURCE_KEY, JSON.stringify(csvSources));
+                    } catch (err) {
+                        allData = allData.filter(q => q.sourceId !== sourceId);
+                        csvSources = csvSources.filter(src => src.id !== sourceId);
+                        alert("ブラウザの保存容量を超えたため、CSVを保存できませんでした。\n不要なデータを削除してから再度お試しください。");
+                        return;
+                    }
+
+                    const typeName = type === 'ox' ? '〇×' : (type === '4c' ? '4択' : '並べ替え');
+                    alert(`${extracted.length}問の${typeName}データを追加しました！\n（現在 合計${allData.length}問）`);
+                    fileInput.value = "";
+                    setupThemes();
+                } else {
+                    alert("指定された形式の問題が見つかりませんでした。\nファイルの選択や文字コードを確認してください。");
+                }
+            };
+            reader.onerror = () => alert("ファイルの読み込みに失敗しました。");
+            reader.readAsText(file, selectedEncoding);
+        }
+
+        function parseCSVText(text) {
+            let rows = [], currentRow = [], currentCell = '', inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                if (inQuotes) {
+                    if (char === '"' && text[i+1] === '"') { currentCell += '"'; i++; }
+                    else if (char === '"') inQuotes = false; else currentCell += char;
+                } else {
+                    if (char === '"') inQuotes = true;
+                    else if (char === ',') { currentRow.push(currentCell); currentCell = ''; }
+                    else if (char === '\n' || char === '\r') {
+                        currentRow.push(currentCell); rows.push(currentRow);
+                        currentRow = []; currentCell = '';
+                        if (char === '\r' && text[i+1] === '\n') i++;
+                    } else currentCell += char;
+                }
+            }
+            if (currentCell || text[text.length-1] === ',') currentRow.push(currentCell);
+            if (currentRow.length > 0) rows.push(currentRow);
+            return rows;
+        }
+
+        function finishInit() {
+            if (allData.length === 0) {
+                alert("データが読み込まれていません！ファイルを選択して読み込みボタンを押してください。"); return;
+            }
+            setupThemes();
+            showTopMenu();
+        }
+
+        function resetData() {
+            if (confirm("本当に全問題データをリセットしますか？\n（これまでの正解履歴もすべて消去されます！）")) {
+                localStorage.removeItem(STORAGE_DATA_KEY);
+                localStorage.removeItem(STORAGE_USER_KEY);
+                localStorage.removeItem(STORAGE_SOURCE_KEY);
+                location.reload();
+            }
+        }
+
+        // --- Data Access & UI Updates ---
+        function getUserData(id) {
+            if (!userData[id]) userData[id] = { checked: false, streak: 0, played: false };
+            return userData[id];
+        }
+
+        function saveData() { localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userData)); }
+
+        function updateGlobalStats() {
+            let total = allData.length, mastered = 0, checked = 0;
+            allData.forEach(q => {
+                let u = getUserData(q.id);
+                if (u.streak >= 2) mastered++;
+                if (u.checked) checked++;
+            });
+            let pct = total > 0 ? Math.round(mastered/total*100) : 0;
+            
+            document.getElementById('global-stats-top').innerHTML = 
+                `<strong>全体の学習状況</strong><br>` +
+                `総問題数: ${total} 問<br>` +
+                `修得済 (👑2連勝): <strong style="color:var(--primary-dark); font-size:1.1em;">${mastered}</strong> 問 (${pct}%)<br>` +
+                `要復習 (☑️チェック): <strong style="color:var(--red)">${checked}</strong> 問`;
+        }
+
+        function setupThemes() {
+            const themes = ['all', ...new Set(allData.map(q => q.theme))];
+            const wbSelect = document.getElementById('wb-select-theme');
+            wbSelect.innerHTML = '';
+            themes.forEach(t => {
+                let opt = document.createElement('option');
+                opt.value = t; opt.text = t === 'all' ? 'すべてのテーマ' : t;
+                wbSelect.appendChild(opt);
+            });
+        }
+
+        function renderThemeCards() {
+            const list = document.getElementById('theme-list');
+            list.innerHTML = '';
+            
+            const qtypeEl = document.getElementById('select-qtype');
+            const qtype = qtypeEl ? qtypeEl.value : 'all';
+            
+            let baseData = allData;
+            if (qtype !== 'all') baseData = allData.filter(q => q.type === qtype);
+            
+            const themes = ['all', ...new Set(baseData.map(q => q.theme))];
+            if (selectedTheme !== 'all' && !themes.includes(selectedTheme)) {
+                selectedTheme = 'all'; 
+            }
+            
+            themes.forEach(t => {
+                let qs = t === 'all' ? baseData : baseData.filter(q => q.theme === t);
+                let total = qs.length;
+                if (t !== 'all' && total === 0) return;
+                
+                let mastered = 0, one = 0, checked = 0;
+                qs.forEach(q => {
+                    let u = getUserData(q.id);
+                    if (u.streak >= 2) mastered++; else if (u.streak === 1) one++;
+                    if (u.checked) checked++;
+                });
+                
+                let mPct = total > 0 ? (mastered / total * 100) : 0;
+                let oPct = total > 0 ? (one / total * 100) : 0;
+                
+                let card = document.createElement('div');
+                card.className = 'theme-card' + (selectedTheme === t ? ' active' : '');
+                card.onclick = () => { selectedTheme = t; renderThemeCards(); updateTargetCount(); };
+                
+                let title = t === 'all' ? '🌟 すべてのテーマ' : t;
+                card.innerHTML = `
+                    <div class="theme-card-title">${title}</div>
+                    <div class="theme-stats-text">
+                        <span>全${total}問</span>
+                        <span style="color:var(--primary-dark); font-weight:bold;">👑修得:${mastered}</span>
+                        <span style="color:var(--blue); font-weight:bold;">👍1回:${one}</span>
+                        <span style="color:var(--red); font-weight:bold;">☑️:${checked}</span>
+                    </div>
+                    <div class="theme-bar-container">
+                        <div class="t-bar-master" style="width:${mPct}%"></div>
+                        <div class="t-bar-one" style="width:${oPct}%"></div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function getFilteredTestQuestions() {
+            const mode = document.getElementById('select-mode').value;
+            const qtype = document.getElementById('select-qtype').value;
+            return allData.filter(q => {
+                let u = getUserData(q.id);
+                let themeMatch = (selectedTheme === 'all' || q.theme === selectedTheme);
+                let modeMatch = true;
+                if (mode === 'unmastered') modeMatch = (u.streak < 2);
+                if (mode === 'checked') modeMatch = u.checked;
+                let typeMatch = (qtype === 'all' || q.type === qtype);
+                return themeMatch && modeMatch && typeMatch;
+            });
+        }
+
+        function updateTargetCount() {
+            const box = document.getElementById('target-count-box');
+            const targetLen = getFilteredTestQuestions().length;
+            if (targetLen === 0) {
+                box.innerHTML = `対象問題数: <strong>0問</strong> (条件を変更してください)`;
+                box.style.color = 'var(--red)';
+            } else {
+                box.innerHTML = `対象問題数: <strong>${targetLen}問</strong>`;
+                box.style.color = '#e65100';
+            }
+        }
+
+        // --- Workbook List ---
+        function renderWorkbookList() {
+            const theme = document.getElementById('wb-select-theme').value;
+            const qtype = document.getElementById('wb-select-qtype').value;
+            const list = document.getElementById('wb-list');
+            list.innerHTML = '';
+            
+            let targetQs = allData;
+            if (theme !== 'all') targetQs = targetQs.filter(q => q.theme === theme);
+            if (qtype !== 'all') targetQs = targetQs.filter(q => q.type === qtype);
+            
+            targetQs.forEach(q => {
+                const u = getUserData(q.id);
+                let li = document.createElement('li');
+                
+                let leftDiv = document.createElement('div');
+                leftDiv.className = 'list-left';
+                leftDiv.onclick = () => openModalFromWorkbook(q.id);
+                
+                let icon = '➖';
+                if (u.streak >= 2) icon = '👑'; else if (u.streak === 1) icon = '👍';
+                else if (u.checked) icon = '⚠️'; else if (u.played) icon = '❌';
+                
+                let typeBadge = '';
+                if (q.type === 'ox') typeBadge = `<span class="badge-type badge-ox">〇×</span>`;
+                else if (q.type === '4c') typeBadge = `<span class="badge-type badge-4c">4択</span>`;
+                else if (q.type === 'sort') typeBadge = `<span class="badge-type badge-sort">並替</span>`;
+                
+                let impBadge = `<span class="badge-imp">重要度 ${q.importance || '-'}</span>`;
+                let shortQ = q.question.length > 25 ? q.question.substring(0, 25) + '...' : q.question;
+                
+                leftDiv.innerHTML = `<span class="res-icon">${icon}</span><div style="font-size:0.9em;">${typeBadge}${impBadge}<strong>No.${q.n}</strong> <span style="font-size:0.85em; color:#888;">(M${q.m})</span><br>${shortQ}</div>`;
+                
+                let rightDiv = document.createElement('div');
+                rightDiv.className = 'list-right';
+                
+                let histText = "未解答";
+                if (u.played) {
+                    if (u.streak >= 2) histText = "○○"; else if (u.streak === 1) histText = "〇"; else histText = "✕"; 
+                }
+                let histBg = (histText === "○○" || histText === "〇") ? "#e8f5e9" : (histText === "✕" ? "#ffebee" : "#f0f0f0");
+                let histColor = (histText === "○○" || histText === "〇") ? "var(--primary-dark)" : (histText === "✕" ? "var(--red)" : "#888");
+                
+                let histBadge = document.createElement('div');
+                histBadge.innerText = `履歴:${histText}`;
+                histBadge.style.fontSize = '0.7em';
+                histBadge.style.fontWeight = 'bold';
+                histBadge.style.padding = '2px 6px';
+                histBadge.style.borderRadius = '10px';
+                histBadge.style.background = histBg;
+                histBadge.style.color = histColor;
+                
+                let chkContainer = document.createElement('label');
+                chkContainer.className = 'list-chk-container';
+                chkContainer.onclick = (e) => e.stopPropagation(); 
+                let chkInput = document.createElement('input');
+                chkInput.type = 'checkbox'; chkInput.checked = u.checked; chkInput.style.transform = 'scale(1.1)';
+                chkInput.onchange = (e) => { u.checked = e.target.checked; saveData(); };
+                
+                let chkSpan = document.createElement('span'); chkSpan.innerText = '確認';
+                chkContainer.appendChild(chkInput); chkContainer.appendChild(chkSpan);
+                
+                rightDiv.appendChild(histBadge); rightDiv.appendChild(chkContainer);
+                li.appendChild(leftDiv); li.appendChild(rightDiv);
+                list.appendChild(li);
+            });
+        }
+
+        // --- Quiz Core ---
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generateChoices(q) {
+            let choices = new Set();
+            choices.add(q.answer);
+            
+            let sameTheme = allData.filter(x => x.type === '4c' && x.theme === q.theme && x.answer !== q.answer);
+            sameTheme = shuffle(sameTheme);
+            for (let sq of sameTheme) { choices.add(sq.answer); if (choices.size === 4) break; }
+            
+            if (choices.size < 4) {
+                let otherTheme = allData.filter(x => x.type === '4c' && x.theme !== q.theme && !choices.has(x.answer));
+                otherTheme = shuffle(otherTheme);
+                for (let oq of otherTheme) { choices.add(oq.answer); if (choices.size === 4) break; }
+            }
+            
+            let fallbacks = ['売上原価', '当期純利益', '減価償却費', '有価証券', '貸借対照表'];
+            let idx = 0;
+            while(choices.size < 4 && idx < fallbacks.length) { choices.add(fallbacks[idx] + " "); idx++; }
+            
+            return shuffle(Array.from(choices));
+        }
+
+        function startQuiz() {
+            activeQuestions = getFilteredTestQuestions();
+            if (activeQuestions.length === 0) { alert("該当する問題がありません！"); return; }
+
+            const order = document.getElementById('select-question-order').value;
+            if (order === 'random') {
+                activeQuestions = shuffle(activeQuestions);
+            } else {
+                activeQuestions = [...activeQuestions].sort((a, b) => {
+                    const aNo = Number(a.n) || 0;
+                    const bNo = Number(b.n) || 0;
+                    const diff = aNo - bNo;
+                    if (diff !== 0) return order === 'asc' ? diff : -diff;
+                    return String(a.id).localeCompare(String(b.id), 'ja');
+                });
+            }
+
+            questionTimeLimit = Number(document.getElementById('select-time-limit').value) || 0;
+            currentIndex = 0; sessionCorrect = 0; sessionHistory = [];
+            switchScreen('quiz');
+            loadQuestion();
+        }
+
+        function stopQuestionTimer() {
+            if (questionTimerId !== null) {
+                clearInterval(questionTimerId);
+                questionTimerId = null;
+            }
+        }
+
+        function updateQuestionTimer() {
+            if (!questionTimeLimit || questionAnswered) return;
+            const elapsed = (Date.now() - questionTimerStartedAt) / 1000;
+            const remaining = Math.max(0, questionTimeLimit - elapsed);
+            const progress = Math.min(100, (elapsed / questionTimeLimit) * 100);
+            const panel = document.getElementById('timer-panel');
+            document.getElementById('timer-clock').textContent = `${remaining.toFixed(1)}秒`;
+            document.getElementById('timer-fill').style.width = `${progress}%`;
+            panel.classList.toggle('warning', progress >= 60 && progress < 85);
+            panel.classList.toggle('danger', progress >= 85);
+            if (remaining <= 0) {
+                stopQuestionTimer();
+                checkAnswer('', true);
+            }
+        }
+
+        function startQuestionTimer() {
+            stopQuestionTimer();
+            const panel = document.getElementById('timer-panel');
+            panel.classList.remove('warning', 'danger');
+            document.getElementById('timer-fill').style.width = '0%';
+            if (!questionTimeLimit) {
+                panel.style.display = 'none';
+                document.getElementById('timer-clock').textContent = '--';
+                return;
+            }
+            panel.style.display = 'block';
+            document.getElementById('timer-clock').textContent = `${questionTimeLimit.toFixed(1)}秒`;
+            questionTimerStartedAt = Date.now();
+            questionTimerId = setInterval(updateQuestionTimer, 100);
+            updateQuestionTimer();
+        }
+
+        // --- 並べ替え用UIレンダラー ---
+        function renderSortUI() {
+            const selectedArea = document.getElementById('sort-selected-area');
+            const availableArea = document.getElementById('sort-available-area');
+            const checkBtn = document.getElementById('btn-sort-check');
+            
+            selectedArea.innerHTML = '';
+            availableArea.innerHTML = '';
+            
+            selectedSortChunks.forEach((chunk, index) => {
+                let btn = document.createElement('div');
+                btn.className = 'sort-chunk';
+                btn.innerText = chunk;
+                btn.onclick = () => {
+                    selectedSortChunks.splice(index, 1);
+                    currentSortChunks.push(chunk);
+                    renderSortUI();
+                };
+                selectedArea.appendChild(btn);
+            });
+            
+            currentSortChunks.forEach((chunk, index) => {
+                let btn = document.createElement('div');
+                btn.className = 'sort-chunk-avail';
+                btn.innerText = chunk;
+                btn.onclick = () => {
+                    currentSortChunks.splice(index, 1);
+                    selectedSortChunks.push(chunk);
+                    renderSortUI();
+                };
+                availableArea.appendChild(btn);
+            });
+            
+            // 全ての選択肢が選ばれたら解答ボタンを表示
+            if (currentSortChunks.length === 0 && selectedSortChunks.length > 0) {
+                checkBtn.style.display = 'block';
+            } else {
+                checkBtn.style.display = 'none';
+            }
+        }
+
+        function checkSortAnswer() {
+            const userAnswer = selectedSortChunks.join('');
+            checkAnswer(userAnswer);
+        }
+
+        function loadQuestion() {
+            stopQuestionTimer();
+            questionAnswered = false;
+            const q = activeQuestions[currentIndex];
+            const u = getUserData(q.id);
+            
+            document.getElementById('q-theme').innerText = q.theme;
+            document.getElementById('q-progress').innerText = `${currentIndex + 1} / ${activeQuestions.length}`;
+            
+            let typeBadge = '';
+            if (q.type === 'ox') typeBadge = `<span class="badge-type badge-ox">〇×</span>`;
+            else if (q.type === '4c') typeBadge = `<span class="badge-type badge-4c">4択</span>`;
+            else if (q.type === 'sort') typeBadge = `<span class="badge-type badge-sort">並替</span>`;
+            
+            let impBadge = `<span class="badge-imp">重要度 ${q.importance || '-'}</span>`;
+            const editedBadge = q.edited ? `<span class="edited-badge">編集済</span>` : '';
+            document.getElementById('q-meta').innerHTML = `${editedBadge}${typeBadge}${impBadge} No.${q.n} (マスターNo.${q.m})`;
+            
+            document.getElementById('q-text').innerText = q.question;
+            document.getElementById('q-checkbox').checked = u.checked;
+            
+            let histText = "未解答";
+            if (u.played) {
+                if (u.streak >= 2) histText = "○○"; else if (u.streak === 1) histText = "〇"; else histText = "✕"; 
+            }
+            const histLabel = document.getElementById('q-history');
+            histLabel.innerText = `履歴: ${histText}`;
+            if (histText === "○○" || histText === "〇") { histLabel.style.color = "var(--primary-dark)"; histLabel.style.background = "#e8f5e9"; } 
+            else if (histText === "✕") { histLabel.style.color = "var(--red)"; histLabel.style.background = "#ffebee"; } 
+            else { histLabel.style.color = "#888"; histLabel.style.background = "#f0f0f0"; }
+
+            const areaOx = document.getElementById('action-area-ox');
+            const area4c = document.getElementById('action-area-4c');
+            const areaSort = document.getElementById('action-area-sort');
+            
+            areaOx.style.display = 'none'; area4c.style.display = 'none'; areaSort.style.display = 'none';
+            areaOx.style.visibility = 'visible'; area4c.style.visibility = 'visible'; areaSort.style.visibility = 'visible';
+            
+            document.getElementById('btn-next').style.display = 'none';
+            document.getElementById('result-area').style.display = 'none';
+
+            if (q.type === 'ox') {
+                areaOx.style.display = 'flex';
+            } else if (q.type === '4c') {
+                area4c.innerHTML = '';
+                let choices = generateChoices(q);
+                choices.forEach(c => {
+                    let btn = document.createElement('button');
+                    btn.className = 'btn-4c';
+                    btn.innerText = c;
+                    btn.onclick = () => checkAnswer(c);
+                    area4c.appendChild(btn);
+                });
+                area4c.style.display = 'flex';
+            } else if (q.type === 'sort') {
+                currentSortChunks = shuffle([...q.chunks]);
+                selectedSortChunks = [];
+                renderSortUI();
+                areaSort.style.display = 'flex';
+            }
+            startQuestionTimer();
+        }
+
+        function toggleCheck(e) {
+            const u = getUserData(activeQuestions[currentIndex].id);
+            u.checked = e.target.checked;
+            saveData();
+        }
+
+        function checkAnswer(userAnswer, isTimeUp = false) {
+            if (questionAnswered) return;
+            questionAnswered = true;
+            stopQuestionTimer();
+            const q = activeQuestions[currentIndex];
+            const u = getUserData(q.id);
+            // 比較（並べ替えの場合は連結された文字列同士の比較になる）
+            const isCorrect = !isTimeUp && (userAnswer.trim() === q.answer.trim());
+            u.played = true; 
+            
+            if (isCorrect) {
+                sessionCorrect++; u.streak += 1;
+                if (u.streak >= 2) u.checked = false; 
+            } else {
+                u.streak = 0; u.checked = true; 
+            }
+            saveData();
+            
+            sessionHistory.push({ 
+                id: q.id, no: q.n, master: q.m, qText: q.question, isCorrect: isCorrect,
+                userAnswer: isTimeUp ? '時間切れ' : userAnswer, correctAnswer: q.answer, explanation: q.explanation, type: q.type, importance: q.importance 
+            });
+            
+            document.getElementById('q-checkbox').checked = u.checked;
+            document.getElementById('action-area-ox').style.visibility = 'hidden';
+            document.getElementById('action-area-4c').style.visibility = 'hidden';
+            document.getElementById('action-area-sort').style.visibility = 'hidden';
+            document.getElementById('btn-next').style.display = 'block';
+            
+            const resultArea = document.getElementById('result-area');
+            const rTitle = document.getElementById('r-title');
+            const rExp = document.getElementById('r-exp');
+            resultArea.style.display = 'block';
+            
+            let statusHtml = "";
+            if (u.streak >= 2) statusHtml = `<div style="font-size:0.85em; margin-top:5px; color:#f57f17;">👑 修得済！(連続正解 ${u.streak}回)</div>`;
+            else if (u.streak === 1) statusHtml = `<div style="font-size:0.85em; margin-top:5px; color:var(--blue);">👍 連続正解 1回</div>`;
+            else statusHtml = `<div style="font-size:0.85em; margin-top:5px; color:var(--red);">⚠️ 要復習 (チェックに登録しました)</div>`;
+
+            // 不正解の場合は正解を枠で囲ってわかりやすく表示する
+            if (isCorrect) {
+                resultArea.className = 'correct-bg'; 
+                rTitle.innerHTML = `正解！ 🎉 ${statusHtml}`; 
+                rTitle.style.color = 'var(--primary-dark)';
+            } else {
+                resultArea.className = 'incorrect-bg';
+                const missTitle = isTimeUp ? '時間切れです' : '不正解...';
+                rTitle.innerHTML = `${missTitle} ${statusHtml}<div style="font-size:0.8em; font-weight:normal; color:#333; margin-top:8px; line-height:1.4; padding:8px; background:white; border-radius:5px; border-left:3px solid var(--red);">正解：<br><b>${q.answer}</b></div>`;
+                rTitle.style.color = 'var(--red)';
+            }
+            rExp.innerText = q.explanation ? "【解説】\n" + q.explanation : "【解説】\n特になし";
+        }
+
+        function nextQuestion() {
+            stopQuestionTimer();
+            currentIndex++;
+            if (currentIndex >= activeQuestions.length) {
+                switchScreen('summary');
+                document.getElementById('session-stats').innerHTML = 
+                    `今回の正解数: <strong>${sessionCorrect}</strong> / ${activeQuestions.length} 問<br>` +
+                    `正答率: <strong>${Math.round(sessionCorrect/activeQuestions.length*100)}%</strong>`;
+                renderSummaryList();
+            } else {
+                loadQuestion();
+            }
+        }
+        
+        // --- Summary & Modal ---
+        function renderSummaryList() {
+            const logContainer = document.getElementById('session-log');
+            logContainer.innerHTML = '';
+            
+            sessionHistory.forEach((log, index) => {
+                const u = getUserData(log.id);
+                let li = document.createElement('li');
+                
+                let leftDiv = document.createElement('div'); leftDiv.className = 'list-left';
+                leftDiv.onclick = () => openModalFromSummary(index);
+                
+                let icon = log.isCorrect ? '<span class="res-icon res-correct">⭕</span>' : '<span class="res-icon res-incorrect">❌</span>';
+                
+                let typeBadge = '';
+                if (log.type === 'ox') typeBadge = `<span class="badge-type badge-ox">〇×</span>`;
+                else if (log.type === '4c') typeBadge = `<span class="badge-type badge-4c">4択</span>`;
+                else if (log.type === 'sort') typeBadge = `<span class="badge-type badge-sort">並替</span>`;
+                
+                let impBadge = `<span class="badge-imp">重要度 ${log.importance || '-'}</span>`;
+                let shortQ = log.qText.length > 25 ? log.qText.substring(0, 25) + '...' : log.qText;
+                
+                leftDiv.innerHTML = `${icon}<div style="font-size:0.9em;">${typeBadge}${impBadge}<strong>No.${log.no}</strong> <span style="font-size:0.85em; color:#888;">(M${log.master})</span><br>${shortQ}</div>`;
+                
+                let rightDiv = document.createElement('div'); rightDiv.className = 'list-right';
+                
+                let histText = "未解答";
+                if (u.played) {
+                    if (u.streak >= 2) histText = "○○"; else if (u.streak === 1) histText = "〇"; else histText = "✕"; 
+                }
+                let histBg = (histText === "○○" || histText === "〇") ? "#e8f5e9" : (histText === "✕" ? "#ffebee" : "#f0f0f0");
+                let histColor = (histText === "○○" || histText === "〇") ? "var(--primary-dark)" : (histText === "✕" ? "var(--red)" : "#888");
+                
+                let histBadge = document.createElement('div');
+                histBadge.innerText = `履歴:${histText}`;
+                histBadge.style.fontSize = '0.7em'; histBadge.style.fontWeight = 'bold'; histBadge.style.padding = '2px 6px'; histBadge.style.borderRadius = '10px'; histBadge.style.background = histBg; histBadge.style.color = histColor;
+                
+                let chkContainer = document.createElement('label'); chkContainer.className = 'list-chk-container';
+                chkContainer.onclick = (e) => e.stopPropagation(); 
+                let chkInput = document.createElement('input'); chkInput.type = 'checkbox'; chkInput.checked = u.checked; chkInput.style.transform = 'scale(1.1)';
+                chkInput.onchange = (e) => { u.checked = e.target.checked; saveData(); };
+                
+                let chkSpan = document.createElement('span'); chkSpan.innerText = '確認';
+                chkContainer.appendChild(chkInput); chkContainer.appendChild(chkSpan);
+                rightDiv.appendChild(histBadge); rightDiv.appendChild(chkContainer);
+                li.appendChild(leftDiv); li.appendChild(rightDiv);
+                logContainer.appendChild(li);
+            });
+        }
+
+        function populateModal(qObj, userAnswerHtml) {
+            currentModalQId = qObj.id; 
+            const u = getUserData(qObj.id);
+            
+            let typeBadge = '';
+            if (qObj.type === 'ox') typeBadge = `<span class="badge-type badge-ox">〇×</span>`;
+            else if (qObj.type === '4c') typeBadge = `<span class="badge-type badge-4c">4択</span>`;
+            else if (qObj.type === 'sort') typeBadge = `<span class="badge-type badge-sort">並替</span>`;
+            
+            let impBadge = `<span class="badge-imp">重要度 ${qObj.importance || '-'}</span>`;
+            document.getElementById('modal-meta').innerHTML = `${typeBadge}${impBadge} No.${qObj.n} (マスターNo.${qObj.m})`;
+            
+            document.getElementById('modal-checkbox').checked = u.checked;
+            let histText = "未解答";
+            if (u.played) {
+                if (u.streak >= 2) histText = "○○"; else if (u.streak === 1) histText = "〇"; else histText = "✕"; 
+            }
+            const histLabel = document.getElementById('modal-history');
+            histLabel.innerText = `履歴: ${histText}`;
+            if (histText === "○○" || histText === "〇") { histLabel.style.color = "var(--primary-dark)"; histLabel.style.background = "#e8f5e9"; } 
+            else if (histText === "✕") { histLabel.style.color = "var(--red)"; histLabel.style.background = "#ffebee"; } 
+            else { histLabel.style.color = "#888"; histLabel.style.background = "#f0f0f0"; }
+            
+            document.getElementById('modal-q').innerText = qObj.question || qObj.qText;
+            document.getElementById('modal-a').innerHTML = userAnswerHtml;
+            document.getElementById('modal-e').innerText = qObj.explanation ? "【解説】\n" + qObj.explanation : "【解説】\n特になし";
+            
+            document.getElementById('detail-modal').style.display = 'flex';
+        }
+
+        function openModalFromSummary(index) {
+            isModalFromWorkbook = false;
+            const log = sessionHistory[index];
+            let aHtml = `
+                <div style="margin-bottom:8px;">あなたの解答: <strong style="color:${log.isCorrect ? 'var(--primary-dark)' : 'var(--red)'}; display:block; padding-left:10px;">${log.userAnswer}</strong></div>
+                <div>正解: <strong style="display:block; padding-left:10px;">${log.correctAnswer}</strong></div>
+            `;
+            populateModal(log, aHtml);
+        }
+
+        function openModalFromWorkbook(qId) {
+            isModalFromWorkbook = true;
+            const q = allData.find(item => item.id === qId);
+            let aHtml = `<div>正解: <strong style="color:var(--primary-dark); display:block; padding-top:5px;">${q.answer}</strong></div>
+                <button class="mini-edit-btn" style="margin-top:12px; width:100%;" onclick="openQuestionEditorById('${q.id}')">✏️ この問題を編集</button>`;
+            populateModal(q, aHtml);
+        }
+
+        function toggleModalCheck(e) {
+            if (!currentModalQId) return;
+            const u = getUserData(currentModalQId);
+            u.checked = e.target.checked;
+            saveData(); 
+        }
+
+        function closeDetail() {
+            document.getElementById('detail-modal').style.display = 'none';
+            if (isModalFromWorkbook) renderWorkbookList(); else renderSummaryList();
+        }
+
+
+        // --- v9: Question editor & original-format CSV export ---
+        function saveAllStores() {
+            localStorage.setItem(STORAGE_DATA_KEY, JSON.stringify(allData));
+            localStorage.setItem(STORAGE_SOURCE_KEY, JSON.stringify(csvSources));
+        }
+
+        function openQuestionEditorFromQuiz() {
+            const q = activeQuestions[currentIndex];
+            if (q) openQuestionEditorById(q.id);
+        }
+
+        function openQuestionEditorById(qId) {
+            const q = allData.find(item => item.id === qId);
+            if (!q) { alert('編集対象の問題が見つかりません。'); return; }
+            editingQuestionId = q.id;
+            editingOriginal = {
+                theme: q.theme || '',
+                importance: q.importance || '',
+                question: q.question || '',
+                answer: q.answer || '',
+                explanation: q.explanation || '',
+                chunks: Array.isArray(q.chunks) ? [...q.chunks] : []
+            };
+            document.getElementById('edit-theme').value = q.theme || '';
+            document.getElementById('edit-importance').value = q.importance || '';
+            document.getElementById('edit-question').value = q.question || '';
+            document.getElementById('edit-answer').value = q.answer || '';
+            document.getElementById('edit-explanation').value = q.explanation || '';
+            const chunksRow = document.getElementById('edit-chunks-row');
+            chunksRow.style.display = q.type === 'sort' ? 'flex' : 'none';
+            document.getElementById('edit-chunks').value = Array.isArray(q.chunks) ? q.chunks.join('\n') : '';
+
+            const source = csvSources.find(src => src.id === q.sourceId);
+            const note = document.getElementById('edit-source-note');
+            if (source) {
+                note.innerHTML = `元ファイル：<strong>${escapeHtml(source.fileName)}</strong><br>保存すると元CSVの該当セルにも反映されます。`;
+            } else {
+                note.innerHTML = 'この問題は旧バージョンで読み込まれたため、元CSVとの関連情報がありません。問題の編集は保存できますが、元形式CSVには書き出せません。';
+            }
+            document.getElementById('detail-modal').style.display = 'none';
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeQuestionEditor() {
+            document.getElementById('edit-modal').style.display = 'none';
+            editingQuestionId = null;
+            editingOriginal = null;
+        }
+
+        function writeSourceCell(row, index, value) {
+            if (!row || index === undefined || index === null || index < 0) return;
+            while (row.length <= index) row.push('');
+            row[index] = value;
+        }
+
+        function saveQuestionEdit() {
+            const q = allData.find(item => item.id === editingQuestionId);
+            if (!q) { alert('編集対象の問題が見つかりません。'); return; }
+
+            const edited = {
+                theme: document.getElementById('edit-theme').value.trim() || 'テーマ未定',
+                importance: document.getElementById('edit-importance').value.trim() || '-',
+                question: document.getElementById('edit-question').value.trim(),
+                answer: document.getElementById('edit-answer').value.trim(),
+                explanation: document.getElementById('edit-explanation').value.trim()
+            };
+            if (!edited.question) { alert('問題文を入力してください。'); return; }
+            if (!edited.answer) { alert('解答を入力してください。'); return; }
+            if (q.type === 'ox' && !['○','〇','×'].includes(edited.answer)) {
+                alert('〇×問題の解答は「○」または「×」で入力してください。'); return;
+            }
+            if (q.type === 'ox' && edited.answer === '〇') edited.answer = '○';
+
+            q.theme = edited.theme;
+            q.importance = edited.importance;
+            q.question = edited.question;
+            q.answer = edited.answer;
+            q.explanation = edited.explanation;
+            if (q.type === 'sort') {
+                const chunks = document.getElementById('edit-chunks').value.split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+                if (chunks.length < 2) { alert('並べ替え用の区切りを2つ以上入力してください。'); return; }
+                q.chunks = chunks;
+            }
+            q.edited = true;
+            q.editedAt = new Date().toISOString();
+
+            const source = csvSources.find(src => src.id === q.sourceId);
+            const original = editingOriginal || {};
+            let hasSourceChange = false;
+            if (source && source.rows[q.sourceRowIndex]) {
+                const row = source.rows[q.sourceRowIndex];
+                const c = q.sourceColumns || {};
+                if (q.theme !== original.theme) { writeSourceCell(row, c.theme, q.theme); hasSourceChange = true; }
+                if (q.importance !== original.importance) { writeSourceCell(row, c.importance, q.importance); hasSourceChange = true; }
+                if (q.question !== original.question) { writeSourceCell(row, c.question, q.question); hasSourceChange = true; }
+                if (q.answer !== original.answer) { writeSourceCell(row, c.answer, q.answer); hasSourceChange = true; }
+                if (q.explanation !== original.explanation) { writeSourceCell(row, c.explanation, q.explanation); hasSourceChange = true; }
+                if (q.type === 'sort' && Array.isArray(c.chunks)) {
+                    const oldChunks = Array.isArray(original.chunks) ? original.chunks : [];
+                    const chunksChanged = JSON.stringify(q.chunks || []) !== JSON.stringify(oldChunks);
+                    if (chunksChanged) {
+                        c.chunks.forEach((columnIndex, i) => writeSourceCell(row, columnIndex, q.chunks[i] || ''));
+                        hasSourceChange = true;
+                    }
+                }
+                if (hasSourceChange) {
+                    source.editedQuestionIds = Array.from(new Set([...(source.editedQuestionIds || []), q.id]));
+                    source.lastEditedAt = q.editedAt;
+                }
+            }
+
+            try { saveAllStores(); }
+            catch (err) { alert('保存容量が不足しているため、編集内容を保存できませんでした。'); return; }
+
+            setupThemes();
+            if (currentScreen === 'quiz' && activeQuestions[currentIndex] && activeQuestions[currentIndex].id === q.id) loadQuestion();
+            if (currentScreen === 'workbook') renderWorkbookList();
+            closeQuestionEditor();
+            alert('修正内容を保存しました。');
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        function openSourceManager() {
+            renderSourceManager();
+            document.getElementById('source-modal').style.display = 'flex';
+        }
+
+        function closeSourceManager() {
+            document.getElementById('source-modal').style.display = 'none';
+        }
+
+        function renderSourceManager() {
+            const list = document.getElementById('source-list');
+            list.innerHTML = '';
+            if (csvSources.length === 0) {
+                list.innerHTML = `<div class="notice-box">元CSV情報を保持したファイルがありません。旧バージョンで読み込んだ問題は、いったんリセットしてこの版でCSVを読み直すと出力できるようになります。</div>`;
+                return;
+            }
+            csvSources.forEach(source => {
+                const card = document.createElement('div');
+                card.className = 'source-card';
+                const typeName = source.type === 'ox' ? '〇×' : (source.type === '4c' ? '4択' : '並べ替え');
+                const editCount = (source.editedQuestionIds || []).length;
+                card.innerHTML = `
+                    <div class="source-title">${escapeHtml(source.fileName)}</div>
+                    <div class="source-meta">
+                        形式：${typeName} ／ 文字コード：${escapeHtml(source.encoding || 'UTF-8')}<br>
+                        データ行：${Math.max(0, (source.rows || []).length - 1)}行
+                        <div class="change-summary">編集済み：${editCount}問</div>
+                    </div>
+                    <div class="source-actions">
+                        <button class="source-download" onclick="downloadSourceCSV('${source.id}')">修正版をダウンロード</button>
+                        <button class="source-delete" onclick="removeSourceFile('${source.id}')">このCSVの問題を削除</button>
+                    </div>`;
+                list.appendChild(card);
+            });
+        }
+
+        function csvEscape(value) {
+            const text = String(value ?? '');
+            if (/[",\r\n]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
+            return text;
+        }
+
+        function buildCSVText(source) {
+            const lineEnding = source.lineEnding || '\r\n';
+            return (source.rows || []).map(row => row.map(csvEscape).join(',')).join(lineEnding);
+        }
+
+        function makeRevisedFileName(name) {
+            const dot = name.lastIndexOf('.');
+            if (dot > 0) return name.slice(0, dot) + '_修正版' + name.slice(dot);
+            return name + '_修正版.csv';
+        }
+
+        function triggerBlobDownload(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+        }
+
+        function downloadSourceCSV(sourceId) {
+            const source = csvSources.find(src => src.id === sourceId);
+            if (!source) { alert('元CSV情報が見つかりません。'); return; }
+            const csvText = buildCSVText(source);
+            const fileName = makeRevisedFileName(source.fileName || '修正版.csv');
+
+            if ((source.encoding || '').toLowerCase().includes('shift') && window.Encoding) {
+                try {
+                    const unicodeArray = Encoding.stringToCode(csvText);
+                    const sjisArray = Encoding.convert(unicodeArray, { to:'SJIS', from:'UNICODE' });
+                    triggerBlobDownload(new Blob([new Uint8Array(sjisArray)], { type:'text/csv' }), fileName);
+                    return;
+                } catch (err) {
+                    console.warn('Shift-JIS conversion failed; fallback to UTF-8.', err);
+                }
+            }
+            triggerBlobDownload(new Blob(['\uFEFF' + csvText], { type:'text/csv;charset=utf-8' }), fileName);
+            if ((source.encoding || '').toLowerCase().includes('shift') && !window.Encoding) {
+                alert('Shift-JIS変換ライブラリを読み込めなかったため、UTF-8（BOM付き）で書き出しました。');
+            }
+        }
+
+        function removeSourceFile(sourceId) {
+            const source = csvSources.find(src => src.id === sourceId);
+            if (!source) return;
+            if (!confirm(`「${source.fileName}」から読み込んだ問題をすべて削除しますか？\n学習履歴も対象問題分が削除されます。`)) return;
+            const ids = new Set(allData.filter(q => q.sourceId === sourceId).map(q => q.id));
+            allData = allData.filter(q => q.sourceId !== sourceId);
+            ids.forEach(id => delete userData[id]);
+            csvSources = csvSources.filter(src => src.id !== sourceId);
+            saveAllStores();
+            localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userData));
+            setupThemes();
+            renderSourceManager();
+            if (allData.length === 0) {
+                closeSourceManager();
+                switchScreen('init');
+            } else {
+                updateGlobalStats();
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
