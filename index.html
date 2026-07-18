@@ -1,7 +1,7 @@
 <!--
 ==================================================
 財表ドリル 開発情報
-Version : 1.0.14 (表示 v10.19)
+Version : 1.0.15 (表示 v10.20)
 最終更新 : 2026-07-18
 
 ■ このファイルについて
@@ -9,6 +9,9 @@ Version : 1.0.14 (表示 v10.19)
 仕様書・TODO・更新履歴は本コメントで管理し、別ファイルは原則作成しない。
 
 ■ 今回の更新
+・設定画面のプルダウン文言を簡略化
+・出題モードと出題順の並び順を整理
+・出題範囲の選択欄に控えめな枠線を追加
 ・ゲーム風カウントダウン追加
 ・GO!演出追加
 ・効果音追加
@@ -89,7 +92,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務諸表論ドリル v10.19</title>
+    <title>財務諸表論ドリル v10.20</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --blue: #2196F3; --red: #f44336; --bg: #f4f7f6; --text: #333; }
         * { box-sizing: border-box; }
@@ -138,8 +141,8 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         .theme-setting-group { margin-bottom:8px; }
         .theme-selector-row { display:grid; grid-template-columns:minmax(112px,38%) minmax(0,1fr); align-items:center; gap:10px; }
         .theme-selector-row > label { margin:0; font-size:.92em; line-height:1.25; }
-        .theme-selector-button { width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 2px; background:transparent; border:0; border-bottom:1px solid #d6d6d6; border-radius:0; color:#222; font:inherit; font-size:.92em; text-align:left; cursor:pointer; }
-        .theme-selector-button:focus { outline:none; border-bottom-color:var(--primary); }
+        .theme-selector-button { width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; background:#fff; border:1px solid #d8d8d8; border-radius:6px; color:#222; font:inherit; font-size:.92em; text-align:left; cursor:pointer; }
+        .theme-selector-button:focus { outline:none; border-color:var(--primary); }
         .theme-selector-button .theme-selector-text { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .theme-selector-chevron { flex:0 0 auto; font-size:.85em; line-height:1; transition:transform .18s ease; }
         .theme-selector-button[aria-expanded="true"] .theme-selector-chevron { transform:rotate(180deg); }
@@ -782,7 +785,7 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
 
     <header>
         <button id="header-back-btn" onclick="handleBack()">戻る</button>
-        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.19</span>
+        財務諸表論 ドリル <span style="font-size:.65em;opacity:.85;">v10.20</span>
     </header>
 
     <div class="container" id="init-screen">
@@ -842,9 +845,9 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
             <label for="select-qtype" style="font-weight:bold;">① 問題形式</label>
             <select id="select-qtype" onchange="renderThemeCards(); updateTargetCount();">
                 <option value="all">すべて（〇× / 4択 / 並べ替え）</option>
-                <option value="ox">〇×問題のみ</option>
-                <option value="4c">4択問題のみ</option>
-                <option value="sort">並べ替え問題のみ</option>
+                <option value="ox">〇×問題</option>
+                <option value="4c">4択問題</option>
+                <option value="sort">並べ替え問題</option>
             </select>
         </div>
         
@@ -862,17 +865,17 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         <div class="compact-setting-row">
             <label for="select-mode" style="font-weight:bold;">③ 出題モード</label>
             <select id="select-mode" onchange="updateTargetCount()">
-                <option value="unmastered">未修得の問題を学習（おすすめ）</option>
-                <option value="checked">チェック問題（復習）のみ</option>
-                <option value="all">すべての問題を出題</option>
+                <option value="all">全ての問題</option>
+                <option value="unmastered">未修得の問題</option>
+                <option value="checked">チェック問題</option>
             </select>
         </div>
         
         <div class="compact-setting-row">
             <label for="select-study-style" style="font-weight:bold;">④ 学習スタイル</label>
             <select id="select-study-style">
-                <option value="learning">学習モード（自分で次へ）</option>
-                <option value="training">トレーニング（自動で次へ）</option>
+                <option value="learning">学習モード</option>
+                <option value="training">トレーニング</option>
             </select>
         </div>
 
@@ -893,9 +896,9 @@ ChatGPT はコードだけでなく、この開発情報も毎回更新する。
         <div class="compact-setting-row">
             <label for="select-question-order" style="font-weight:bold;">⑥ 出題順</label>
             <select id="select-question-order">
+                <option value="asc">昇順</option>
+                <option value="desc">降順</option>
                 <option value="random">ランダム</option>
-                <option value="asc">No.の昇順</option>
-                <option value="desc">No.の降順</option>
             </select>
         </div>
 
